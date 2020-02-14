@@ -17,6 +17,7 @@ Gantt :
 	implémenter les classes (Bateau,Croiseur,Joueur,...) : 2h
 	implémenter la fenêtre de connexion : 1h
 	implementer les fonctions d'enregistrement et de connexion : 1h
+	établir les règles du jeu : 3h
 	implémennter le script à exécuter pour faire une partie : 3h
 	implémenter la connexion serveur/clients : 2h
 	implémenter le programme client : 2h
