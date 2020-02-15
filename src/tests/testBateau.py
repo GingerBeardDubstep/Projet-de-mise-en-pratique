@@ -2,24 +2,55 @@
 # -*-coding:Utf-8 -*
 import unittest
 from classes.Damier import *
+from classes.Bateau import *
 from classes.fonctions import *
 from classes.exceptions.ExceptionsBateau import *
 
-class TestDamier(unittest.TestCase) :
+class TestBateau(unittest.TestCase) :
 	def setUp(self) :
 		self.dNew = Damier()
-		self.dCharge = Damier()
+		self.b = Bateau(5,5,2,"PorteAvion")
+		self.p = PorteAvion()
+
+		"""self.dCharge = Damier()
 		self.dCharge.change(0,0,1)
 		self.dCharge.change(19,19,1)
-		self.dCharge.change(10,10,-1)
+		self.dCharge.change(10,10,-1)"""
 
-	def testInitDamier(self) :
-		d = Damier(self.dCharge)
-		self.assertEqual(d.liste[0][0],1)
-		self.assertEqual(d.liste[19][19],1)
-		self.assertEqual(d.liste[10][10],-1)
+		#print(self.b.position)
+	def testGetPosition(self) :
+		self.dNew.placer("bas","A1",self.p)
+		liste = ["A1","A2","A3","A4","A5"]
+		self.assertEqual(liste,self.p.getPosition())
+		self.setUp()
+		self.dNew.placer("haut","H11",self.p)
+		liste = ["H11","H10","H9","H8","H7"]
+		self.assertEqual(liste,self.p.getPosition())
+		self.setUp()
+		self.dNew.placer("droite","H11",self.p)
+		liste = ["H11","I11","J11","K11","L11"]
+		self.assertEqual(liste,self.p.getPosition())
+		self.setUp()
+		self.dNew.placer("gauche","G11",self.p)
+		liste = ["G11","F11","E11","D11","C11"]
+		self.assertEqual(liste,self.p.getPosition())
 
-	def testChange(self) :
+	def testEstTouche(self) :
+		self.p.est_touche()
+		self.assertEqual(self.p.pv,4)
+		self.p.est_touche()
+		self.assertEqual(self.p.pv,3)
+		self.p.est_touche()
+		self.assertEqual(self.p.pv,2)
+		self.p.est_touche()
+		self.assertEqual(self.p.pv,1)
+
+		with self.assertRaises(ToucheCouleError) :
+			self.p.est_touche()
+		self.assertEqual(self.p.pv,0)
+
+
+	"""def testChange(self) :
 		self.dNew.change(0,0,1)
 		self.dNew.change(19,19,1)
 		self.dNew.change(10,10,-1)
@@ -55,6 +86,4 @@ class TestDamier(unittest.TestCase) :
 		liste0 = self.dCharge.getCoordFromValue(0)
 		self.assertEqual(len(liste0),397)
 
-		self.assertTrue(self.dCharge.getCoordFromValue(5)==[])
-
-unittest.main()
+		self.assertTrue(self.dCharge.getCoordFromValue(5)==[])"""

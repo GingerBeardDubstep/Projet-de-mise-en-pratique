@@ -7,10 +7,11 @@ import re
 
 
 
-
 class Bateau :
-	identifiant = 1
+	"""Classe mère modélisant les bateaux"""
+	cpt = 0
 	def __init__(self,taille,pv,carburant,nom) :
+		"""La plupart des parametres sont renvoyées par les initialisations d'objets héritants de celui la """
 		self.taille=taille
 		self._pv = pv
 		self.pv = pv
@@ -18,9 +19,9 @@ class Bateau :
 		self._carburant = carburant
 		self.nom = nom
 		self.aFlot = True
-		self.id = identifiant
-		identifiant+=1
 		self.position = []
+		self.id = Bateau.cpt
+		Bateau.cpt+=1
 
 	def __repr__(slef) :
 		return("Le "+nom+" a "+str(pv)+" PV et il lui reste "+str(self.carburant)+" en carburant")
@@ -28,108 +29,95 @@ class Bateau :
 	def __str__(slef) :
 		return("Le "+nom+" a "+str(pv)+" PV et il lui reste "+str(self.carburant)+" en carburant")
 
-	def peut_bouger(self) :
-		return((self.pv==self._pv) and (self.carburant!=0))
+	"""def peut_bouger(self) :
+		return(self.carburant!=0)"""
 
-	def placer(self,direction,pos,damier) :
-		tst = True
-		_damier = Damier(damier)
-		if(re.search(r"^[A-T][1-20]$",pos)) :
-			absisse, ordonnee = decoder(pos)
-
-			if(direction=="haut") :
-				for i in range(0,self.taille) :
-					if(ordonnee-i<0) :
-						tst = False
-						break
-				if(tst) :
-					for i in range(0,self.taille) :
-						self.liste.append((absisse-i,ordonnee))
-						damier.changer(absisse-i,ordonnee,1)
-			elif(direction=="bas") :
-				for i in range(0,self.taille) :
-					if(ordonnee+i>=20) :
-						tst = False
-						break
-				if(tst) :
-					for i in range(0,self.taille) :
-						self.liste.append((absisse+i,ordonnee))
-						damier.changer(absisse+i,ordonnee,1)
-			elif(direction=="droite") :
-				for i in range(0,self.taille) :
-					if(absisse+i>=20) :
-						tst = False
-						break
-				if(tst) :
-					for i in range(0,self.taille) :
-						self.liste.append((absisse,ordonnee+i))
-						damier.changer(absisse,ordonnee+i,1)
-				else :
-					raise MauvaisPlacementError("On ne peut pas placer ce bateau dans ce sens à cet endroit")			
-
-			elif(direction=="gauche") :
-				for i in range(0,self.taille) :
-					if(absisse-i<0) :
-						tst = False
-						break
-				if(tst) :
-					for i in range(0,self.taille) :
-						self.liste.append((absisse-i,ordonnee))
-						damier.changer(absisse-i,ordonnee,1)
-				else :
-					raise MauvaisPlacementError("On ne peut pas placer ce bateau dans ce sens à cet endroit")
-			else :
-				raise NameError(direction+" n'est pas une direction.")
-		else :
-			raise PositionErrorException(pos+" n'est pas une case du jeu.")
-
-
-
-	def avance(self) :
+	"""def avance(self,direction) :
 		if(self.peut_bouger()) :
-			self.carburant-=1
+			if(self.aFlot) :
+				self.carburant-=1
+				absisse, ordonnee = 
+			else :
+				raise EstMortError("Ce "+self.nom+" a coulé et ne peut donc plus avancer")
 		else :
-			raise NoMovementException("Plus de carburant")  #A définir !
+			raise NoMovementException("Plus de carburant")  #A définir !"""
 
-	def ravitaille(self) :
-		self.carburant=self._carburant
+	"""def ravitaille(self,nb) :
+		if(self.aFlot) :
+			if(self.carburant+nb>self._carburant) :
+				self.carburant=self._carburant
+			else :
+				self.carburant+=nb
+		else :
+			raise EstMortError("Ce "+self.nom+" est déjà coulé : il ne peut être ravitaillé.")"""
 
-	def est_touché(self,degats) :
-		self.pv-=degats
+	def getPosition(self) :
+		"""Retourne la liste des positions du bateau"""
+		return(self.position)
+
+	def est_touche(self) :
+		"""vérifie su le bateau est coulé, lui enlève 1 pv sinon"""
+		self.pv-=1
 		if(self.pv<=0) :
 			self.pv = 0
 			self.est_coule()
+		else :
+			pass
 
 	def est_coule(self) :
+		"""Si le bateau est coulé, envoie une exception"""
 		self.aFlot = False
+		raise ToucheCouleError("Le "+self.nom+" est coulé!")
 
 class PorteAvion(Bateau) :
 	"""Classe porte-avions, elle posséde 2 chasseurs de reconnaissance et a une longueur de 5 cases"""
 	def __init__(self) :
-		self.__init__(self,5,5,2,"porte-avion")
+		Bateau.__init__(self,5,5,2,"porte-avion")
 		self.chasseurs = 2
 		self._chasseurs = 2
 
-	def reconaissance(self) :
+	"""def reconaissance(self) :
 		if(self.pv!=0) :
 			self.chasseurs -= 1
 			if(self.chasseur == 0) :
 				raise NoWeaponError("Plus de chasseurs")
 		else :
-			raise EstMortError
-	def ravitaille(self) :
-		self.ravitaille()
+			raise EstMortError("Ce "+self.nom+" a déjà coulé : il ne peut pas envoyer de chasseurs.")
+
+	def ravitaille(self,nbChasseur) :
+		Bateau.ravitaille(self)
 		self.chasseurs = self._chasseurs
 
+	def tire(self) :
+		raise NoWeaponError("Un porte-avion n'a pas de missiles.")"""
 
+class SousMarin(Bateau) :
+	"""Classe sous-marin : 3 cases"""
+	def __init__(self) :
+		Bateau.__init__(self,3,3,10,"sous-marin")
+		#self.missiles = 10
+		#self._missiles = 10
 
+	"""def tire(self) :
+		self.missiles-=1"""
 
+class Torpilleur(Bateau) :
+	"""Classe torpilleur : 2 cases"""
+	def __init__(self) :
+		Bateau.__init__(self,2,2,15,"torpilleur")
+		#self.missiles = 5
+		#self._missiles = 5
 
-class Ravitailleur(Bateau) :
-	pass
+class ContreTorpilleur(Bateau) :
+	"""Classe contre-torpilleur : 3 cases"""
+	def __init__(self) :
+		Bateau.__init__(self,3,3,15,"contre-torpilleur")
+		#self.missiles = 5
+		#self._missiles = 5
 
+class Croiseur(Bateau) :
 
-
-
-
-
+	def __init__(self) :
+		Bateau.__init__(self,4,4,15,"croiseur")
+		#self.missiles = 5
+		#self._missiles = 5

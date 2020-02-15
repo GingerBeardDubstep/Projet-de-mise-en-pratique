@@ -58,6 +58,7 @@ def decoder(pos) :
 	"""Renvoie un couple d'abscisse ordonnee correspondant à la case : decode("A4") renvoie 0,3 """
 	_x=pos[0]
 	x=-1
+	_y = pos[1:]
 	y=int(pos[1:])-1
 	if(_x=="A") :
 		x=0
@@ -106,4 +107,4 @@ def decoder(pos) :
 		raise PositionError(_x+_y+" n'existe pas")
 		return(None,None)
 	else :
-		return(x,y)
+		return(y,x)

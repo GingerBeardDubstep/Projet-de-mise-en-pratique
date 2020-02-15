@@ -21,3 +21,19 @@ class PositionError(Exception) :
 
 	def __str__(self) :
 		return(self.message)
+
+class MauvaisPlacementError(Exception) :
+	def __init__(self,message) :
+		print(message)
+		self.message=message
+
+	def __str__(self) :
+		return(self.message)
+
+class ToucheCouleError(Exception) :
+	def __init__(self,message) :
+		print(message)
+		self.message=message
+
+	def __str__(self) :
+		return(self.message)
