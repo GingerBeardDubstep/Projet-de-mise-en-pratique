@@ -1,41 +1,28 @@
-
 #!/usr/local/bin/python3.8
 # -*-coding:Utf-8 -*
-class NoMovementException(Exception) :
+class LoginExistantException(Exception) :
 	def __init__(self,message) :
-		#print(message)
 		self.message=message
 
 	def __str__(self) :
 		return(self.message)
 
-class NoWeaponError(Exception) :
+class PseudoExistantException(Exception) :
 	def __init__(self,message) :
-		#print(message)
 		self.message=message
 
 	def __str__(self) :
 		return(self.message)
 
-class PositionError(Exception) :
+class NoPlayerFoundException(Exception) :
 	def __init__(self,message) :
-		#print(message)
 		self.message=message
 
 	def __str__(self) :
 		return(self.message)
 
-class MauvaisPlacementError(Exception) :
+class HashException(Exception) :
 	def __init__(self,message) :
-		#print(message)
-		self.message=message
-
-	def __str__(self) :
-		return(self.message)
-
-class ToucheCouleError(Exception) :
-	def __init__(self,message) :
-		#print(message)
 		self.message=message
 
 	def __str__(self) :
