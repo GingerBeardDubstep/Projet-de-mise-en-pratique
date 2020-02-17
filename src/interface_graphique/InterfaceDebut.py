@@ -3,6 +3,7 @@ import pickle
 from classes.Joueur import *
 from classes.StructureJoueurs import *
 import socket
+import os
 """from interface_graphique.InterfaceUtilisateur import *
 from interface_graphique.InterfaceInscription import *"""
 import time
@@ -34,19 +35,29 @@ class InterfaceConnexion(Frame):
 #3A37666FACCADE7D47AC6C6F34
 
 	def connexion(self) :
-		login = self.var_log.get()
-		mdp = self.var_key.get()
-		self.serveur.send(b"tentative connexion")
-		time.sleep(0.1)
-		self.serveur.send(login.encode())
-		time.sleep(0.1)
-		self.serveur.send(mdp.encode())
-		retour = self.serveur.recv(1024)
-		retour = pickle.loads(retour)
-		if(retour == "False") :
-			self.message = Label(self, text="Mot de passe ou login erroné")
-		else :
-			lancerInterfaceUtilisateur(self,self.serveur,self.fenetre,retour)
+		try :
+			login = self.var_log.get()
+			mdp = self.var_key.get()
+			self.serveur.send(b"tentative connexion")
+			time.sleep(0.1)
+			self.serveur.send(login.encode())
+			time.sleep(0.1)
+			self.serveur.send(mdp.encode())
+			retour = self.serveur.recv(1024)
+			retour = pickle.loads(retour)
+			if(retour == "False") :
+				self.message.config(text="Mot de passe ou login errone",fg="red")
+				self.ligne_log.config(background="red")
+				self.ligne_key.config(background="red")
+			else :
+				lancerInterfaceUtilisateur(self,self.serveur,self.fenetre,retour)
+		except BrokenPipeError :
+			print("serveur hors-ligne")
+			self.serveur.close()
+			self.destroy()
+			self.fenetre.destroy()
+			os._exit(1)
+		
 
 
 	def reinitTot(self) :
@@ -83,7 +94,8 @@ class InterfaceConnexion(Frame):
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
-		self.quit()
+		self.destroy()
+		self.fenetre.destroy()
 
 	def inscription(self) :
 		lancerInterfaceInscription(self.fenetre,self,self.serveur)
@@ -109,7 +121,7 @@ class InterfaceUtilisateur(Frame):
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
-		self.quit()
+		self.destroy()
 		self.fenetre.destroy()
 
 class InterfaceInscription(Frame):
@@ -159,10 +171,19 @@ class InterfaceInscription(Frame):
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
-		self.quit()
+		self.destroy()
+		self.fenetre.destroy()
+
 
 	def envoi(self) :
-		essaiInscription(self,self.fenetre,self.var_log.get(),self.var_key.get(),self.var_pseudo.get(),self.serveur)
+		try :
+			essaiInscription(self,self.fenetre,self.var_log.get(),self.var_key.get(),self.var_pseudo.get(),self.serveur)
+		except BrokenPipeError :
+			print("serveur hors-ligne")
+			self.serveur.close()
+			self.destroy()
+			self.fenetre.destroy()
+			os._exit(1)
 
 	def retour(self) :
 		retourInterface(self,self.fenetre,self.serveur)
@@ -192,7 +213,8 @@ class InterfaceIntermediaire(Frame):
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
-		self.quit()
+		self.destroy()
+		self.fenetre.destroy()
 
 	def retour(self) :
 		retourInterface(self,self.fenetre,self.serveur)
@@ -207,11 +229,17 @@ def essaiInscription(frame,fenetre,login,mdp,pseudo,serveur) :
 	serveur.send(pseudo.encode())
 	retour = serveur.recv(1024).decode()
 	if(retour == "False login") :
-		fenetre.message = Label(frame,text="Ce login est déjà utilisé")
+		frame.ligne_log.config(background = "red")
+		frame.ligne_pseudo.config(background = "white")
+		frame.ligne_key.config(background = "white")
 	elif(retour == "False pseudo") :
-		fenetre.message = Label(frame,text="Ce pseudo est déjà utilisé")
+		frame.ligne_pseudo.config(background = "red")
+		frame.ligne_log.config(background = "white")
+		frame.ligne_key.config(background = "white")
 	elif(retour == "False encodage") :
-		fenetre.message = Label(frame,text="Veuillez tout changer")
+		frame.ligne_pseudo.config(background = "white")
+		frame.ligne_log.config(background = "red")
+		frame.ligne_key.config(background = "red")
 	elif(retour == "Done") :
 		lancerInterfaceIntermediaire(frame,fenetre,serveur)
 	else :
@@ -234,14 +262,14 @@ def lancerInterfaceIntermediaire(frame,fenetre,serveur) :
 	interface = InterfaceIntermediaire(fenetre,serveur)
 
 	interface.mainloop()
-	interface.destroy()
+	#interface.destroy()
 
 def retourInterface(frame,fenetre,serveur) :
 	frame.destroy()
 	interface = InterfaceConnexion(fenetre,serveur)
 
 	interface.mainloop()
-	interface.destroy()
+	#interface.destroy()
 
 
 def lancerInterfaceInscription(fenetre,frame,serveur) :
@@ -249,11 +277,11 @@ def lancerInterfaceInscription(fenetre,frame,serveur) :
 	interface = InterfaceInscription(fenetre,serveur)
 
 	interface.mainloop()
-	interface.destroy()
+	#interface.destroy()
 
 def lancerInterfaceUtilisateur(frame,serveur,fenetre,joueur) :
 	frame.destroy()
 	interface = InterfaceUtilisateur(serveur,fenetre,joueur)
 
 	interface.mainloop()
-	interface.destroy()
+	#interface.destroy()

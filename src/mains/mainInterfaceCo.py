@@ -5,7 +5,10 @@ from classes.Joueur import *
 from classes.StructureJoueurs import *
 from fonctions.fonctionsInterface import *
 from interface_graphique.InterfaceDebut import *
-
-serveur = initialiserClient()
-
-lancerInterface(serveur)
+import os
+try :
+	serveur = initialiserClient()
+except ConnectionRefusedError :
+	print("serveur hors-ligne")
+else :
+	lancerInterface(serveur)

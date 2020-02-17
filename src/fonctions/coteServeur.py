@@ -68,14 +68,16 @@ def lecture(serveur) :
 							el.send(b"Done")
 
 					elif(msg.lower()=="fin exit(0)") :
-						compteur = 0
-						for elem in aLire :
-							if(elem == el) :
-								del liste_connexions[compteur]
-							compteur+=1
-
 						el.close()
+						liste_connexions.remove(el)
 						break
+					elif(msg.lower()=="fermeture reseau principal") :
+						for el in liste_connexions :
+							el.send(b"coupure reseau")
+							el.close()
+							serveur.close()
+							tst=False
+
 
 	except KeyboardInterrupt :
 		for el in liste_connexions :

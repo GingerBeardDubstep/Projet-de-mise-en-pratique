@@ -17,4 +17,4 @@ def lancerInterface(serveur) :
 	interface = InterfaceConnexion(fenetre,serveur)
 
 	interface.mainloop()
-	interface.destroy()
+	#fenetre.destroy()
