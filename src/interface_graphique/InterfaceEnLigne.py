@@ -34,8 +34,15 @@ class InterfaceConnexion(Frame):
 
 	def connexion(self) :
 		try :
+
 			login = self.var_log.get()
 			mdp = self.var_key.get()
+			if(self.var_case.get()==1) :
+				with open("../localdata/identifiants","wb") as file :
+					_temp = (login,mdp)
+					pickle.dump(_temp,file)
+			else :
+				os.system("rm -f ../localdata/identifiants")
 			self.serveur.send(b"tentative connexion")
 			time.sleep(0.1)
 			self.serveur.send(login.encode())
@@ -49,6 +56,8 @@ class InterfaceConnexion(Frame):
 				self.ligne_key.config(background="red")
 			else :
 				retour = pickle.loads(retour)
+				with open("../localdata/dataJoueur","wb") as file :
+					pickle.dump(retour,file)
 				lancerInterfaceUtilisateur(self,self.serveur,self.fenetre,retour)
 		except BrokenPipeError :
 			print("serveur hors-ligne")
@@ -60,37 +69,66 @@ class InterfaceConnexion(Frame):
 
 
 	def reinitTot(self) :
-		self.message = Label(self, text="Connectez-vous ou créez un compte.")
-		self.message.pack()
+		try :
+			file = open("../localdata/identifiants","rb")
+			file.close()
+		except FileNotFoundError :
+			self.var_log = StringVar()
+			self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
+			#self.ligne_log.pack()
 
-		self.message2 = Label(self, text="Login")
-		self.message2.pack()
+			self.var_key = StringVar()
+			self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
+			#self.ligne_key.pack()
+
+			self.var_case = IntVar()
+			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case)
+			#self.case.pack(side="top")
+		else :
+			log=""
+			mdp=""
+			with open("../localdata/identifiants","rb") as file :
+				log,mdp = pickle.load(file)
+			self.var_log = StringVar()
+			self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
+			self.var_log.set(log)
+			#self.ligne_log.pack()
+
+			self.var_key = StringVar()
+			self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
+			self.var_key.set(mdp)
+			#self.ligne_key.pack()
+
+			self.var_case = IntVar()
+			self.var_case.set(1)
+			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case)
+			#self.case.pack(side="top")
+		finally :
+			self.message = Label(self, text="Connectez-vous ou créez un compte.")
+			self.message.pack()
+
+			self.message2 = Label(self, text="Login")
+			self.message2.pack()
 
 
-		self.var_log = StringVar()
-		self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
-		self.ligne_log.pack()
+			self.ligne_log.pack()
 
-		self.message3 = Label(self, text="Mot de passe")
-		self.message3.pack()
+			self.message3 = Label(self, text="Mot de passe")
+			self.message3.pack()
 
-		self.var_key = StringVar()
-		self.ligne_key = Entry(self, textvariable=self.var_key, width=30)
-		self.ligne_key.pack()
+			self.ligne_key.pack()
 
-		self.bouton_co = Button(self, text="Connectez vous", fg="red", command=self.connexion)
-		self.bouton_co.pack(side="left")
-		self.bouton_re = Button(self, text="Inscrivez vous", fg="red", command=self.inscription)
-		self.bouton_re.pack(side="right")
+			self.case.pack(side="top")
 
-		self.bouton_quitter = Button(self, text="Quitter", command=self.quitter)
-		self.bouton_quitter.pack(side="bottom")
-		self.bouton_retour = Button(self, text="Retour", command=self.retour)
-		self.bouton_retour.pack(side="bottom")
-        
-		
-		if(self.bouton_retour is not None) :
-			self.bouton_retour.destroy()
+			self.bouton_co = Button(self, text="Connectez vous", fg="red", command=self.connexion)
+			self.bouton_co.pack(side="left")
+			self.bouton_re = Button(self, text="Inscrivez vous", fg="red", command=self.inscription)
+			self.bouton_re.pack(side="right")
+
+			self.bouton_quitter = Button(self, text="Quitter", command=self.quitter)
+			self.bouton_quitter.pack(side="bottom")
+			self.bouton_retour = Button(self, text="Retour", command=self.retour)
+			self.bouton_retour.pack(side="bottom")
 
 	def retour(self) :
 		self.serveur.send(b"fin exit(0)")
@@ -250,21 +288,12 @@ def essaiInscription(frame,fenetre,login,mdp,pseudo,serveur) :
 		frame.ligne_log.config(background = "red")
 		frame.ligne_key.config(background = "red")
 	elif(retour == "Done") :
+		joueur = Joueur(pseudo)
+		with open("../localdata/dataJoueur","wb") as file :
+			pickle.dump(joueur,file)
 		lancerInterfaceIntermediaire(frame,fenetre,serveur)
 	else :
 		raise CommunicationError("Message inattendu")
-
-def essaiConnexion(fenetre,frame,login,mdp,serveur) :
-	serveur.send(b"tentative connexion")
-	time.sleep(0.1)
-	serveur.send(login.encode())
-	time.sleep(0.1)
-	serveur.send(mdp.encode())
-	retour = serveur.recv(1024).decode()
-	if(retour == "False") :
-		fenetre.message = Label(self, text="Mot de passe ou login erroné")
-	else :
-		lancerInterfaceUtilisateur(frame,serveur,fenetre,retour)
 
 def lancerInterfaceIntermediaire(frame,fenetre,serveur) :
 	frame.destroy()
