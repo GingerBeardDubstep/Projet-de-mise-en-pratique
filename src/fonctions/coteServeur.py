@@ -73,7 +73,10 @@ def lecture(serveur) :
 						break
 					elif(msg.lower()=="fermeture reseau principal") :
 						for el in liste_connexions :
-							el.send(b"coupure reseau")
+							try :
+								el.send(b"coupure reseau")
+							except BrokenPipeError :
+								pass
 							el.close()
 							serveur.close()
 							tst=False

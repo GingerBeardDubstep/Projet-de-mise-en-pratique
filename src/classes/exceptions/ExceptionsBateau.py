@@ -33,7 +33,31 @@ class MauvaisPlacementError(Exception) :
 	def __str__(self) :
 		return(self.message)
 
-class ToucheCouleError(Exception) :
+class ToucheCouleException(Exception) :
+	def __init__(self,message) :
+		#print(message)
+		self.message=message
+
+	def __str__(self) :
+		return(self.message)
+
+class FinDuJeuException(Exception) :
+	def __init__(self,message) :
+		#print(message)
+		self.message=message
+
+	def __str__(self) :
+		return(self.message)
+
+class NoHarmException(Exception) :
+	def __init__(self,message) :
+		#print(message)
+		self.message=message
+
+	def __str__(self) :
+		return(self.message)
+
+class ToucheException(Exception) :
 	def __init__(self,message) :
 		#print(message)
 		self.message=message

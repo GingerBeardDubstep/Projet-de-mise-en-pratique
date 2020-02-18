@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3.8
 # -*-coding:Utf-8 -*
 import re
-from classes.fonctions import *
+from fonctions.fonctionsDamier import *
 from classes.exceptions.ExceptionsBateau import *
 from classes.Bateau import *
 class Damier() :
@@ -68,13 +68,21 @@ class Damier() :
 					if(coord == pos):
 						try :
 							bat.est_touche()
-						except ToucheCouleError :
+						except ToucheCouleException :
 							for coordo in bat.position :
 								ordo , absi = decoder(coordo)
 								self.changer(absi,ordo,-3)
-							raise ToucheCouleError("Le "+bat.nom+" est coulé.")
+							nom = str(bat.nom)
+							self.listeBateau.remove(bat)
+							raise ToucheCouleException("Le "+nom+" est coulé.")
+						except ToucheException :
+							raise ToucheException("")
+
 		else :
 			raise PositionError("Vous ne pouvez pas tirer en "+pos)
+
+	def estVide(self) :
+		return(self.listeBateau==[])
 
 	def changer(self,absisse,ordonnee,val) :
 		"""Change la valeur d'une case de la matrice"""
@@ -91,9 +99,6 @@ class Damier() :
 			return(None)
 		else :
 			return(self.liste[ordonnee][absisse])
-
-	def tir(self,pos) :
-		pass
 
 	def getCoordFromValue(self,val) :
 		"""Renvoie la liste des cases sur lesquelles la valeur est celle entrée en parametres. Exemple ["A10","E8"]"""

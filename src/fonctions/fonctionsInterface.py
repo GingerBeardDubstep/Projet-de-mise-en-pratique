@@ -2,7 +2,6 @@
 # -*-coding:Utf-8 -*
 from tkinter import *
 import socket
-from interface_graphique.InterfaceDebut import *
 
 def initialiserClient() :
 	serveur = socket.socket(socket.AF_INET,socket.SOCK_STREAM)

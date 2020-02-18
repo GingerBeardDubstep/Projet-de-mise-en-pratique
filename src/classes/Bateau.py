@@ -62,12 +62,12 @@ class Bateau :
 			self.pv = 0
 			self.est_coule()
 		else :
-			pass
+			raise ToucheException("Le "+self.nom+" est touché!")
 
 	def est_coule(self) :
 		"""Si le bateau est coulé, envoie une exception"""
 		self.aFlot = False
-		raise ToucheCouleError("Le "+self.nom+" est coulé!")
+		raise ToucheCouleException("Le "+self.nom+" est coulé!")
 
 class PorteAvion(Bateau) :
 	"""Classe porte-avions, elle posséde 2 chasseurs de reconnaissance et a une longueur de 5 cases"""
