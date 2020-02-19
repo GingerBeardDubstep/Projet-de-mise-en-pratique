@@ -3,7 +3,7 @@
 import unittest
 from classes.Damier import *
 from classes.Bateau import *
-from classes.fonctions import *
+from fonctions.fonctionsDamier import *
 from classes.exceptions.ExceptionsBateau import *
 
 class TestBateau(unittest.TestCase) :
@@ -23,29 +23,33 @@ class TestBateau(unittest.TestCase) :
 		liste = ["A1","A2","A3","A4","A5"]
 		self.assertEqual(liste,self.p.getPosition())
 		self.setUp()
-		self.dNew.placer("haut","H11",self.p)
-		liste = ["H11","H10","H9","H8","H7"]
+		self.dNew.placer("haut","H10",self.p)
+		liste = ["H10","H9","H8","H7","H6"]
 		self.assertEqual(liste,self.p.getPosition())
 		self.setUp()
-		self.dNew.placer("droite","H11",self.p)
-		liste = ["H11","I11","J11","K11","L11"]
+		self.dNew.placer("droite","F1",self.p)
+		liste = ["F1","G1","H1","I1","J1"]
 		self.assertEqual(liste,self.p.getPosition())
 		self.setUp()
-		self.dNew.placer("gauche","G11",self.p)
-		liste = ["G11","F11","E11","D11","C11"]
+		self.dNew.placer("gauche","G10",self.p)
+		liste = ["G10","F10","E10","D10","C10"]
 		self.assertEqual(liste,self.p.getPosition())
 
 	def testEstTouche(self) :
-		self.p.est_touche()
+		with self.assertRaises(ToucheException):
+			self.p.est_touche()
 		self.assertEqual(self.p.pv,4)
-		self.p.est_touche()
+		with self.assertRaises(ToucheException):
+			self.p.est_touche()
 		self.assertEqual(self.p.pv,3)
-		self.p.est_touche()
+		with self.assertRaises(ToucheException):
+			self.p.est_touche()
 		self.assertEqual(self.p.pv,2)
-		self.p.est_touche()
+		with self.assertRaises(ToucheException):
+			self.p.est_touche()
 		self.assertEqual(self.p.pv,1)
 
-		with self.assertRaises(ToucheCouleError) :
+		with self.assertRaises(ToucheCouleException) :
 			self.p.est_touche()
 		self.assertEqual(self.p.pv,0)
 

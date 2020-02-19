@@ -2,7 +2,6 @@
 # -*-coding:Utf-8 -*
 from classes.exceptions.ExceptionsBateau import *
 from classes.Damier import *
-from classes.fonctions import *
 import re
 
 

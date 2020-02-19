@@ -3,7 +3,9 @@
 from tkinter import *
 import pickle
 from classes.Joueur import *
-from interface_graphique.InterfaceEnLigne import *
+from classes.Damier import *
+from classes.Partie import *
+#from interface_graphique.InterfaceEnLigne import *
 import socket
 import os
 import time
@@ -65,8 +67,16 @@ class InterfaceHorsLigne(Frame) :
 			interface.mainloop()
 		else :
 			self.destroy()
-			instance = InterfaceJeuHL(self.fenetre,self.joueur)
+			instance = InterfacePlacerHL(self.fenetre,self.joueur)
 			instance.mainloop()
+
+class InterfacePlacerHL(Frame) :
+	def __init__(self,fenetre,joueur,**kwargs) :
+		fenetre.geometry("800x800")
+		self.fenetre=fenetre
+		Frame.init(self,fenetre,width=800,height=800,**kwargs)
+		self.damierJoueur = Damier()
+
 
 class InterfaceQuestion(Frame) :
     

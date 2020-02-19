@@ -121,12 +121,12 @@ class Joueur :
 		secondes = _tmp
 		return(str(heures)+" heure(s) "+str(minutes)+" minute(s) "+str(secondes)+" seconde(s)")
 
-	def partiePerdueHL(self) :
+	def partieHLPerdue(self) :
 		self.nbDefaitesHL+=1
 		self.nbPartiesHL+=1
 		self.addXp(0)
 
-	def partiePerdueEL(self) :
+	def partieELPerdue(self) :
 		self.nbDefaitesEL+=1
 		self.nbPartiesEL+=1
 		self.addXp(0)

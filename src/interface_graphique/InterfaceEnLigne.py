@@ -4,9 +4,14 @@ from tkinter import *
 import pickle
 from classes.Joueur import *
 from classes.StructureJoueurs import *
+from interface_graphique.InterfaceHorsLigne import *
 import socket
 import os
 import time
+
+argFonfNoir = dict()
+argFonfNoir["fg"] = "white"
+argFonfNoir["background"] = "black"
 
 class InterfaceConnexion(Frame):
     
@@ -14,23 +19,13 @@ class InterfaceConnexion(Frame):
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, fenetre,serveur, **kwargs):
 		self.fenetre = fenetre
-		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
+		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2),background="black", **kwargs)
 		self.serveur=serveur
 		self.pack(fill=BOTH)
 		self.bouton_retour = None
 		self.messagenoConnect = Label(self, text="Mot de passe ou login erroné", fg = "red")
 		self.reinitTot()
 		# Création de nos widgets
-		
-
-	def reinit(self,log) :
-		self.message["text"] = "Bienvenue "+log
-		self.bouton_retour = Button(self, text="Se déconnecter",command=self.reinitTot())
-		self.ligne_log.destroy()
-		self.ligne_key.destroy()
-		self.bouton_co.destroy()
-		self.bouton_re.destroy()
-		self.bouton_retour.pack()
 
 	def connexion(self) :
 		try :
@@ -74,15 +69,15 @@ class InterfaceConnexion(Frame):
 			file.close()
 		except FileNotFoundError :
 			self.var_log = StringVar()
-			self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
+			self.ligne_log = Entry(self, textvariable=self.var_log,justify="center", width=30)
 			#self.ligne_log.pack()
 
 			self.var_key = StringVar()
-			self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
+			self.ligne_key = Entry(self, textvariable=self.var_key,justify="center", width=30,show="*")
 			#self.ligne_key.pack()
 
 			self.var_case = IntVar()
-			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case)
+			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case,**argFonfNoir)
 			#self.case.pack(side="top")
 		else :
 			log=""
@@ -90,12 +85,12 @@ class InterfaceConnexion(Frame):
 			with open("../localdata/identifiants","rb") as file :
 				log,mdp = pickle.load(file)
 			self.var_log = StringVar()
-			self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
+			self.ligne_log = Entry(self, textvariable=self.var_log,justify="center", width=25)
 			self.var_log.set(log)
 			#self.ligne_log.pack()
 
 			self.var_key = StringVar()
-			self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
+			self.ligne_key = Entry(self, textvariable=self.var_key,justify="center", width=25,show="*")
 			self.var_key.set(mdp)
 			#self.ligne_key.pack()
 
@@ -104,31 +99,34 @@ class InterfaceConnexion(Frame):
 			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case)
 			#self.case.pack(side="top")
 		finally :
-			self.message = Label(self, text="Connectez-vous ou créez un compte.")
+			"""self.cadreSup = Label(self,text="BattleShip",width=60,height=5)
+			self.cadreSup.pack(side="top",fill=X,padx=0,pady=0,ipadx=0,ipady=0)"""
+			self.message = Label(self, text="Connectez-vous ou créez un compte.",**argFonfNoir)
 			self.message.pack()
 
-			self.message2 = Label(self, text="Login")
+			self.message2 = Label(self, text="Login",**argFonfNoir)
 			self.message2.pack()
 
 
 			self.ligne_log.pack()
 
-			self.message3 = Label(self, text="Mot de passe")
+			self.message3 = Label(self, text="Mot de passe",**argFonfNoir)
 			self.message3.pack()
 
 			self.ligne_key.pack()
 
 			self.case.pack(side="top")
 
-			self.bouton_co = Button(self, text="Connectez vous", fg="red", command=self.connexion)
+			self.bouton_co = Button(self, text="Connectez vous", fg="red", command=self.connexion,background="black")
 			self.bouton_co.pack(side="left")
-			self.bouton_re = Button(self, text="Inscrivez vous", fg="red", command=self.inscription)
+			self.bouton_re = Button(self, text="Inscrivez vous", fg="red", command=self.inscription,background="black")
 			self.bouton_re.pack(side="right")
 
-			self.bouton_quitter = Button(self, text="Quitter", command=self.quitter)
+			self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,background="red")
 			self.bouton_quitter.pack(side="bottom")
-			self.bouton_retour = Button(self, text="Retour", command=self.retour)
+			self.bouton_retour = Button(self, text="Retour", command=self.retour,**argFonfNoir)
 			self.bouton_retour.pack(side="bottom")
+			self.ligne_log.focus()
 
 	def retour(self) :
 		self.serveur.send(b"fin exit(0)")

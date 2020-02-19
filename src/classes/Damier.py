@@ -28,9 +28,9 @@ class Damier() :
 		self.liste = []
 		self.listeBateau = []
 		if(not args) :
-			for i in range(0,20) :
+			for i in range(0,10) :
 				liste1=[]
-				for j in range(0,20) :
+				for j in range(0,10) :
 					liste1.append(0)
 				self.liste.append(list(liste1))
 			self.id=int(Damier.cmpt)
@@ -87,14 +87,14 @@ class Damier() :
 	def changer(self,absisse,ordonnee,val) :
 		"""Change la valeur d'une case de la matrice"""
 
-		if(absisse<0 or absisse>19 or ordonnee<0 or ordonnee>19) :
+		if(absisse<0 or absisse>9 or ordonnee<0 or ordonnee>9) :
 			raise ValueError
 		else :
 			self.liste[ordonnee][absisse] = val
 
 	def getValue(self,absisse,ordonnee) :
 		"""renvoie la valeur d'une case de la matrice"""
-		if(absisse<0 or absisse>19 or ordonnee<0 or ordonnee>19) :
+		if(absisse<0 or absisse>9 or ordonnee<0 or ordonnee>9) :
 			raise ValueError
 			return(None)
 		else :
@@ -137,7 +137,7 @@ class Damier() :
 				raise MauvaisPlacementError("On ne peut pas placer ce bateau dans ce sens à cet endroit")
 		elif(direction=="bas") :
 			for i in range(0,bateau.taille) :
-				if(ordonnee+i>=20) :
+				if(ordonnee+i>=10) :
 					tst = False
 				elif(self.getValue(absisse,ordonnee+i)==1) :
 						raise MauvaisPlacementError("Un bateau se trouve déjà ici")
@@ -151,7 +151,7 @@ class Damier() :
 				raise MauvaisPlacementError("On ne peut pas placer ce bateau dans ce sens à cet endroit")
 		elif(direction=="droite") :
 			for i in range(0,bateau.taille) :
-				if(absisse+i>=20) :
+				if(absisse+i>=10) :
 					#print(str(absisse+i)+" "+str(ordonnee))
 					tst = False
 				elif(self.getValue(absisse+i,ordonnee)==1) :

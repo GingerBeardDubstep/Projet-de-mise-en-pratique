@@ -6,16 +6,31 @@ from classes.Joueur import *
 from fonctions.fonctionsInterface import *
 from interface_graphique.InterfaceEnLigne import *
 import os
+import socket
+import turtle
 
 class InterfaceDebut(Frame):
     
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, fenetre, **kwargs):
+		"""turtle.setpos(10,10)
+		turtle.pd()
+		turtle.fd(5)
+		turtle.right(90)
+		turtle.fd(5)
+		turtle.right(90)
+		turtle.fd(5)
+		turtle.right(90)
+		turtle.fd(5)
+		turtle.right(90)
+		turtle.pu()"""
+
 		self.fenetre = fenetre
-		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
-		background = PhotoImage(file = "../images_interface/background_depart.png",master=self)
-		self.pack(fill=BOTH)
+		back = PhotoImage(file = "../images_interface/background_depart.png",master=fenetre)
+		Frame.__init__(self, fenetre, width=500, height=200, **kwargs)
+		
+		self.pack(fill=BOTH,expand=1)
 		self.bouton_retour = None
 		self.message = Label(self, text="BattleShip")
 		self.message.pack(side="top")
@@ -23,34 +38,40 @@ class InterfaceDebut(Frame):
 
 
 		self.bouton_hl = Button(self, text="Partie hors-ligne", fg="green", command=self.horsLigne)
-		self.bouton_hl.pack(side="left")
+		self.bouton_hl.pack(side="left",padx=10)
 
 		self.bouton_re = Button(self, text="Partie en ligne", command=self.enLigne)
-		self.bouton_re.pack(side="right")
+		self.bouton_re.pack(side="right",padx=10)
 
 		self.bouton_quitter = Button(self, text="Quitter", fg="red", command=self.quitter)
-		self.bouton_quitter.pack()		# Création de nos widgets
+		self.bouton_quitter.place(x=200,y=165,width=100,height=30)		# Création de nos widgets
 
 	def quitter(self) :
 		self.quit()
 
 	def enLigne(self) :
 		self.destroy()
-		self.fenetre.destroy()
-		os.system("python3.8 -m mains.mainInterfaceCo")
-		os._exit(0)
+		try :
+			serveur = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			serveur.connect(('localhost',12800))
+		except ConnectionError :
+			print("serveur hors-ligne")
+			os._exit(1)
+		else :
+			instance = InterfaceConnexion(self.fenetre,serveur)
 
 	def horsLigne(self) :
 		self.destroy()
-		self.fenetre.destroy()
-		os.system("python3.8 -m mains.mainInterfaceHL")
+		instance = InterfaceHorsLigne(self.fenetre)
+		instance.mainloop()
 		os._exit(0)
 
 def lancerInterfaceDebut() :
 	fenetre = Tk()
+	fenetre.title("BattleShip v1")
+	fenetre.geometry("500x200")
 	interface = InterfaceDebut(fenetre)
 
 	interface.mainloop()
-	interface.destroy()
 
 
