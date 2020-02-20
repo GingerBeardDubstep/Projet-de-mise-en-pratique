@@ -38,6 +38,7 @@ class Damier() :
 		else :
 			for el in args :
 				self.liste = list(el.liste)
+				self.listeBateau = list(el.listeBateau)
 				self.id=int(Damier.cmpt)
 				Damier.cmpt+=1
 				break
@@ -109,7 +110,7 @@ class Damier() :
 			cpt2 = 0
 			for j in i :
 				if(val==j) :
-					liste.append(encoder(cpt1,cpt2))
+					liste.append(encoder(cpt2,cpt1))
 				cpt2+=1
 			cpt1+=1
 		return(liste)

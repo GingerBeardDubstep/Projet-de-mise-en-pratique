@@ -8,12 +8,3 @@ def initialiserClient() :
 	serveur.connect(('localhost',12800))
 	return(serveur)
 
-
-
-
-def lancerInterface(serveur) :
-	fenetre = Tk()
-	interface = InterfaceConnexion(fenetre,serveur)
-
-	interface.mainloop()
-	#fenetre.destroy()

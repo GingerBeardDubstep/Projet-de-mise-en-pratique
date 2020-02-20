@@ -27,10 +27,8 @@ def encoder(x,y) :
 		_x="J"
 	else :
 		raise PositionError("position impossible a")
-		return(None,None)
 	if(y+1>10) :
 		raise PositionError("position impossible b")
-		return(None,None)
 	else :
 		return(_x+_y)
 
@@ -62,9 +60,7 @@ def decoder(pos) :
 		x=9
 	else :
 		raise PositionError(_x+_y+" n'existe pas")
-		return(None,None)
 	if(y>=10) :
 		raise PositionError(_x+_y+" n'existe pas")
-		return(None,None)
 	else :
 		return(y,x)

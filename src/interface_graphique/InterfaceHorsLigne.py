@@ -76,6 +76,8 @@ class InterfacePlacerHL(Frame) :
 		self.fenetre=fenetre
 		Frame.init(self,fenetre,width=800,height=800,**kwargs)
 		self.damierJoueur = Damier()
+		self.damierIA = Damier()
+		self.damierIA.remplissageRandom()
 
 
 class InterfaceQuestion(Frame) :
