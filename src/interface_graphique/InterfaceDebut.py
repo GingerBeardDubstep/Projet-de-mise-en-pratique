@@ -27,23 +27,23 @@ class InterfaceDebut(Frame):
 		turtle.pu()"""
 
 		self.fenetre = fenetre
-		back = PhotoImage(file = "../images_interface/background_depart.png",master=fenetre)
-		Frame.__init__(self, fenetre, width=500, height=200, **kwargs)
+		#back = PhotoImage(file = "../images_interface/background_depart.png",master=fenetre)
+		Frame.__init__(self, fenetre,background="blue", width=500, height=200, **kwargs)
 		
 		self.pack(fill=BOTH,expand=1)
 		self.bouton_retour = None
-		self.message = Label(self, text="BattleShip")
-		self.message.pack(side="top")
+		self.message = Label(self, text="BattleShip",font = ("Helvetica",24,"bold italic"),fg="white",bg="black")
+		self.message.pack(side="top",fill=X)
 		self.message_charge = Label(self,text="Chargement")
 
 
-		self.bouton_hl = Button(self, text="Partie hors-ligne", fg="green", command=self.horsLigne)
+		self.bouton_hl = Button(self, text="Partie hors-ligne", bg="green",fg="white", command=self.horsLigne)
 		self.bouton_hl.pack(side="left",padx=10)
 
-		self.bouton_re = Button(self, text="Partie en ligne", command=self.enLigne)
+		self.bouton_re = Button(self, text="Partie en ligne", bg="green" ,fg="white",command=self.enLigne)
 		self.bouton_re.pack(side="right",padx=10)
 
-		self.bouton_quitter = Button(self, text="Quitter", fg="red", command=self.quitter)
+		self.bouton_quitter = Button(self, text="Quitter", bg="red",fg="white", command=self.quitter)
 		self.bouton_quitter.place(x=200,y=165,width=100,height=30)		# Création de nos widgets
 
 	def quitter(self) :

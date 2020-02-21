@@ -74,7 +74,7 @@ class Damier() :
 								ordo , absi = decoder(coordo)
 								self.changer(absi,ordo,-3)
 							nom = str(bat.nom)
-							self.listeBateau.remove(bat)
+							#self.listeBateau.remove(bat)
 							raise ToucheCouleException("Le "+nom+" est coulé.")
 						except ToucheException :
 							raise ToucheException("")

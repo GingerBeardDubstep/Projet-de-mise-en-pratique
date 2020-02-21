@@ -18,6 +18,7 @@ class InterfaceConnexion(Frame):
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, fenetre,serveur, **kwargs):
+		fenetre.geometry("768x576")
 		self.fenetre = fenetre
 		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2),background="black", **kwargs)
 		self.serveur=serveur
@@ -77,7 +78,7 @@ class InterfaceConnexion(Frame):
 			#self.ligne_key.pack()
 
 			self.var_case = IntVar()
-			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case,**argFonfNoir)
+			self.case = Checkbutton(self, text="Se souvenir de moi", variable=self.var_case)
 			#self.case.pack(side="top")
 		else :
 			log=""
@@ -194,7 +195,7 @@ class InterfaceInscription(Frame):
 		self.message3.pack()
 
 		self.var_key = StringVar()
-		self.ligne_key = Entry(self, textvariable=self.var_key, width=30)
+		self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
 		self.ligne_key.pack()
 
 		self.message4 = Label(self, text="Pseudo")
