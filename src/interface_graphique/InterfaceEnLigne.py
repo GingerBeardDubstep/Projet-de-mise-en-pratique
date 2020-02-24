@@ -1,6 +1,9 @@
 #!/usr/local/bin/python3.8
 # -*-coding:Utf-8 -*
+from threading import Thread
+from threading import RLock
 from tkinter import *
+from tkinter.ttk import *
 import pickle
 from classes.Joueur import *
 from classes.StructureJoueurs import *
@@ -18,9 +21,9 @@ class InterfaceConnexion(Frame):
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, fenetre,serveur, **kwargs):
-		fenetre.geometry("768x576")
+		fenetre.geometry("700x224")
 		self.fenetre = fenetre
-		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2),background="black", **kwargs)
+		Frame.__init__(self, fenetre, width=760, height=570,background="black", **kwargs)
 		self.serveur=serveur
 		self.pack(fill=BOTH)
 		self.bouton_retour = None
@@ -39,6 +42,25 @@ class InterfaceConnexion(Frame):
 					pickle.dump(_temp,file)
 			else :
 				os.system("rm -f ../localdata/identifiants")
+			tstActual = True
+			try :
+				file = open("../localdata/dataJoueur","rb")
+			except FileNotFoundError :
+				tstActual = False
+			else :
+				joueurActuel = pickle.load(file)
+				file.close()
+				if(joueurActuel.pseudo != "__localhost__") :
+					self.serveur.send(b"actualiser profil")
+					time.sleep(0.1)
+					self.serveur.send(login.encode())
+					time.sleep(0.1)
+					self.serveur.send(mdp.encode())
+					time.sleep(0.1)
+					joueurActuel=pickle.dumps(joueurActuel)
+					self.serveur.send(joueurActuel)
+					_osef = self.serveur.recv(1024)
+					print(_osef.decode())
 			self.serveur.send(b"tentative connexion")
 			time.sleep(0.1)
 			self.serveur.send(login.encode())
@@ -116,7 +138,7 @@ class InterfaceConnexion(Frame):
 
 			self.ligne_key.pack()
 
-			self.case.pack(side="top")
+			self.case.pack(side="top",pady=5)
 
 			self.bouton_co = Button(self, text="Connectez vous", fg="red", command=self.connexion,background="black")
 			self.bouton_co.pack(side="left")
@@ -124,9 +146,9 @@ class InterfaceConnexion(Frame):
 			self.bouton_re.pack(side="right")
 
 			self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,background="red")
-			self.bouton_quitter.pack(side="bottom")
+			self.bouton_quitter.pack(side="bottom",pady=5)
 			self.bouton_retour = Button(self, text="Retour", command=self.retour,**argFonfNoir)
-			self.bouton_retour.pack(side="bottom")
+			self.bouton_retour.pack(side="bottom",pady=5)
 			self.ligne_log.focus()
 
 	def retour(self) :
@@ -146,6 +168,32 @@ class InterfaceConnexion(Frame):
 	def inscription(self) :
 		lancerInterfaceInscription(self.fenetre,self,self.serveur)
 
+
+class ChargeReception(Thread) :
+	def __init__(self,serveur,barre) :
+		Thread.__init__(self)
+		self.serveur = serveur
+		self.tst = True
+		self.retour = ""
+		self.barre = barre
+
+	def run(self) :
+		self.serveur.send(b"cherche adversaire")
+		self.retour = self.serveur.recv(1024).decode()
+		self.barre.step()
+		self.barre.update()
+		
+
+class ChargeAffichage(Thread) :
+	def __init__(self,barre,reception) :
+		Thread.__init__(self)
+		self.barre=barre
+		self.tst = True
+
+	def run(self) :
+		pass
+
+
 class InterfaceUtilisateur(Frame):
     
 	"""Notre fenêtre principale.
@@ -156,13 +204,76 @@ class InterfaceUtilisateur(Frame):
 		self.serveur=serveur
 		self.joueur = joueur
 		self.pack(fill=BOTH)
-		self.bouton_retour = None
-		self.message = Label(self, text="Bienvenue "+str(self.joueur.pseudo))
-		self.message.pack()
+		self.message = Label(self, text="Bienvenue "+self.joueur.pseudo)
+		self.message2 = Label(self,text="Niveau "+str(self.joueur.niveau))
+		self.el = Label(self,text="Ratio en ligne : "+str(self.joueur.getRatioEL()))
+		self.nbPart = Label(self,text="Nombre de parties en ligne : "+str(self.joueur.nbPartiesEL))
+		self.message.pack(side="top")
+		self.message2.pack()
+		self.el.pack()
+		self.nbPart.pack()
+		style = Style()
+ 
+		style.theme_use('default')
+ 
+		style.configure("green.Horizontal.TProgressbar", background='green')
+
+		style.configure("blue.Horizontal.TProgressbar", background='blue')
+		self.barre2 = Progressbar(self,length=100,style = "blue.Horizontal.TProgressbar",mode="determinate")
+		self.barre2["value"]=0
+
+		self.barre = Progressbar(self,length=100,style = "green.Horizontal.TProgressbar")
+		self.tempsDeJeu = Label(self,text="Temps de jeu : "+str(int(self.joueur.tempsDeJeuTotal//3600))+" heure(s) "+str((int(self.joueur.tempsDeJeuTotal%3600)//60))+" minute(s) et "+str(int(self.joueur.tempsDeJeuTotal%60))+" seconde(s).")
+		if(self.joueur.niveau==1) :
+			self.barre["value"] = self.joueur.xp/5
+		elif(self.joueur.niveau==2) :
+			self.barre["value"] = self.joueur.xp/15
+		elif(self.joueur.niveau==3) :
+			self.barre["value"] = self.joueur.xp/50
+		elif(self.joueur.niveau==4) :
+			self.barre["value"] = self.joueur.xp/150
+		elif(self.joueur.niveau==5) :
+			self.barre["value"] = self.joueur.xp/200
+		else :
+			self.barre["value"] = 100
+		self.messageC = Label(self,text="Recherche d'adversaire : ")
+		self.tempsDeJeu.pack()
+		self.barre.pack()
+		self.bouton_co = Button(self, text="Chercher un adversaire", fg="white",background="blue", command=self.lancerJeu)
+		self.bouton_co.pack()
+		self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,bg="red",fg="white")
+		self.bouton_quitter.pack(side="bottom")
+
+	def lancerJeu(self) :
+		retour = "pas encore"
+		self.messageC.pack()
+			
+		self.barre2.pack()
+		self.serveur.send(b"cherche")
+		retour = self.serveur.recv(1024).decode()
+		print(retour)
+		time.sleep(0.1)
+		while(retour!="trouve") :
+			self.serveur.send(b"attente")
+			retour = self.serveur.recv(1024).decode()
+			self.barre2.step()
+			self.barre2.update()
+			self.update()
+		if(retour=="trouve") :
+			self.messageC.destroy()
+			self.barre2.destroy()
+			Label(self,text="Joueur Trouvé !").pack(side="bottom")
+		else :
+			self.messageC.destroy()
+			self.barre2.destroy()
+			Label(self,text="Erreur, pas de joueur trouvé").pack(side="bottom")
 
 
-		self.bouton_quitter = Button(self, text="Quitter", fg="red", command=self.quitter)
-		self.bouton_quitter.pack()		# Création de nos widgets
+	def quit(self) :
+		self.serveur.send(b"fin exit(0)")
+		self.serveur.close()
+		self.destroy()
+		self.fenetre.destroy()
 
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")
@@ -170,49 +281,52 @@ class InterfaceUtilisateur(Frame):
 		self.destroy()
 		self.fenetre.destroy()
 
+
 class InterfaceInscription(Frame):
     
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, fenetre,serveur, **kwargs):
+		fenetre.geometry("250x290")
+		fenetre.config(bg="black")
 		self.fenetre = fenetre
-		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
+		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2),bg="black", **kwargs)
 		self.serveur=serveur
 		self.pack(fill=BOTH)
 		self.bouton_retour = None
-		self.message = Label(self, text="Inscription.")
+		self.message = Label(self, text="Inscription",fg="blue",bg="black",font=("Helvetica",18))
 		self.message.pack()
 
-		self.message2 = Label(self, text="Login")
+		self.message2 = Label(self, text="Login",fg="white",bg="black")
 		self.message2.pack()
 
 
 		self.var_log = StringVar()
-		self.ligne_log = Entry(self, textvariable=self.var_log, width=30)
+		self.ligne_log = Entry(self, textvariable=self.var_log, width=30,bg="white",fg="black")
 		self.ligne_log.pack()
 
-		self.message3 = Label(self, text="Mot de passe")
+		self.message3 = Label(self, text="Mot de passe",fg="white",bg="black")
 		self.message3.pack()
 
 		self.var_key = StringVar()
-		self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*")
+		self.ligne_key = Entry(self, textvariable=self.var_key, width=30,show="*",bg="white",fg="black")
 		self.ligne_key.pack()
 
-		self.message4 = Label(self, text="Pseudo")
+		self.message4 = Label(self, text="Pseudo",fg="white",bg="black")
 		self.message4.pack()
 
 		self.var_pseudo = StringVar()
-		self.ligne_pseudo = Entry(self, textvariable=self.var_pseudo, width=30)
+		self.ligne_pseudo = Entry(self, textvariable=self.var_pseudo, width=30,bg="white",fg="black")
 		self.ligne_pseudo.pack()
 
-		self.bouton_in = Button(self, text="Inscription", fg="green", command=self.envoi)
-		self.bouton_in.pack()
+		self.bouton_in = Button(self, text="Inscription", bg="green",fg="white", command=self.envoi)
+		self.bouton_in.pack(pady=5)
 
-		self.bouton_re = Button(self, text="Retour connexion", command=self.retour)
-		self.bouton_re.pack()
+		self.bouton_re = Button(self, text="Retour connexion",bg="blue",fg="white", command=self.retour)
+		self.bouton_re.pack(pady=5)
 
-		self.bouton_quitter = Button(self, text="Quitter", fg="red", command=self.quitter)
-		self.bouton_quitter.pack()		# Création de nos widgets
+		self.bouton_quitter = Button(self, text="Quitter", bg="red",fg="white", command=self.quitter)
+		self.bouton_quitter.pack(pady=5)		# Création de nos widgets
 
 	def quitter(self) :
 		self.serveur.send(b"fin exit(0)")

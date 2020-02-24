@@ -14,6 +14,8 @@ def initialiserServeur() :
 
 def lecture(serveur) :
 	liste_connexions = []
+	liste_attente = []
+	liste_enJeu = []
 	tst = True
 	try :
 		while(tst) :
@@ -33,6 +35,49 @@ def lecture(serveur) :
 				for el in aLire :
 					msg = el.recv(1024)
 					msg = msg.decode()
+					if(msg.lower() == "cherche") :							
+						liste_attente.append(el)
+						el.send(b"pas encore")
+					if(msg.lower() == "attente") :
+						tst1=False
+						for el1,el2 in liste_enJeu :
+							if((el is el1) or (el is el2)) :
+								el.send(b"trouve")
+								tst=True
+						if(tst1) :
+							pass
+						else :
+							if(len(liste_attente)>1) :
+								if(el is liste_attente[0]) :
+									liste_enJeu.append((el,liste_attente[1]))
+									liste_attente.remove(liste_attente[1])
+									liste_attente.remove(el)
+								else :
+									liste_enJeu.append((el,liste_attente[0]))
+									liste_attente.remove(liste_attente[0])
+									liste_attente.remove(el)
+								el.send(b"trouve")
+							else :
+								el.send(b"pas encore")						
+
+					if(msg.lower() == "actualiser profil") :
+						structure = StructureJoueurs()
+						try :
+							structure.importStructure()
+						except :
+							structure = StructureJoueurs()
+						login = el.recv(1024).decode()
+						mdp = el.recv(1024).decode()
+						joueurActuel = el.recv(1024)
+						joueurActuel = pickle.loads(joueurActuel)
+						try :
+							structure.actualiserJoueur(joueurActuel,login,mdp)
+						except NoPlayerFoundException :
+							el.send(b"False")
+						except NoActualException :
+							el.send(b"False")
+						else :
+							el.send(b"Done")
 					if(msg.lower() == "tentative connexion") :
 						structure = StructureJoueurs()
 						try :
@@ -87,4 +132,5 @@ def lecture(serveur) :
 			el.send(b"fin exit(0)")
 			el.close()
 		serveur.close()
+		print("WTF?")
 		raise KeyboardInterrupt

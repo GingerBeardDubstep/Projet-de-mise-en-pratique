@@ -17,16 +17,19 @@ class Partie :
 		self.joueur2=joueur2
 		self.tour = [random.choice([self.joueur2,self.joueur1])]
 		self.grille1 = damier1
-		self.grilleAdverse1 = Damier()
 		self.grille2 = damier2
-		self.grilleAdverse2 = Damier()
+		self.posinit = "Z20"
+		self.previousDirec = "a"
+		self.tempDir = ""
 
 	def initTest(self):
-		self.grille1 = Damier(self.grille2)
+		pass
 
 	def trouveCaseIA(self,pos,posinit="",direc = "",direcTestees = []) :
 		y, x = decoder(pos)
+		#print(pos+" "+direc)
 		if(direc=="") : #A l'initialisation, on teste si les cases alentour sont touchées (pos vaut forcement -2)
+
 			tstMurD = False
 			tstMurG = False
 			tstMurB = False
@@ -54,15 +57,19 @@ class Partie :
 
 			if(not tstMurD) :
 				if(self.grille1.getValue(x+1,y)>=0) :
+					self.tempDir = "d"
 					return(encoder(x+1,y))
 			if(not tstMurG) :
 				if(self.grille1.getValue(x-1,y)>=0) :
+					self.tempDir = "g"
 					return(encoder(x-1,y))
 			if(not tstMurB) :
 				if(self.grille1.getValue(x,y+1)>=0) :
+					self.tempDir = "b"
 					return(encoder(x,y+1))
 			if(not tstMurH) :
 				if(self.grille1.getValue(x,y-1)>=0) :
+					self.tempDir = "h"
 					return(encoder(x,y-1))
 		elif(direc=="d") :
 			if("d" not in direcTestees) :
@@ -74,23 +81,25 @@ class Partie :
 					return(self.trouveCaseIA(posinit,posinit=posinit,direc="g",direcTestees=direcTestees))
 				else :
 					if(self.grille1.getValue(x+1,y)>=0) :
+						self.tempDir = "d"
 						return(encoder(x+1,y))
 					else :
 						direcTestees.append("d")
 						return(self.trouveCaseIA(posinit,posinit=posinit,direc="g",direcTestees=direcTestees))
 			else :
-				return(self.trouveCaseIA(posinit,posinit=posinit,direc="b",direcTestees=direcTestees))
+				return(self.trouveCaseIA(posinit,posinit=posinit,direc="h",direcTestees=direcTestees))
 
 		elif(direc=="g") :
 			if("g" not in direcTestees) :
 				try :
 					if(self.grille1.getValue(x-1,y)==-2) :
-						return(self.trouveCaseIA(encoder(x-1,y),posinit=posinit,direc="d",direcTestees=direcTestees))
+						return(self.trouveCaseIA(encoder(x-1,y),posinit=posinit,direc="g",direcTestees=direcTestees))
 				except ValueError :
 					direcTestees.append("g")
 					return(self.trouveCaseIA(posinit,posinit=posinit,direc="d",direcTestees=direcTestees))
 				else :
 					if(self.grille1.getValue(x-1,y)>=0) :
+						self.tempDir = "g"
 						return(encoder(x-1,y))
 					else :
 						direcTestees.append("g")
@@ -107,11 +116,12 @@ class Partie :
 					return(self.trouveCaseIA(posinit,posinit=posinit,direc="h",direcTestees=direcTestees))
 				else :
 					if(self.grille1.getValue(x,y+1)>=0) :
+						self.tempDir = "b"
 						return(encoder(x,y+1))
 					else :
 						direcTestees.append("b")
 						return(self.trouveCaseIA(posinit,posinit=posinit,direc="h",direcTestees=direcTestees))
-			else :
+			if("b" in direcTestees) :
 				return(self.trouveCaseIA(posinit,posinit=posinit,direc="d",direcTestees=direcTestees))
 		elif(direc=="h") :
 			if("h" not in direcTestees) :
@@ -123,12 +133,13 @@ class Partie :
 					return(self.trouveCaseIA(posinit,posinit=posinit,direc="b",direcTestees=direcTestees))
 				else :
 					if(self.grille1.getValue(x,y-1)>=0) :
+						self.tempDir = "h"
 						return(encoder(x,y-1))
 					else :
 						direcTestees.append("h")
 						return(self.trouveCaseIA(posinit,posinit=posinit,direc="b",direcTestees=direcTestees))
 			else :
-				return(self.trouveCaseIA(posinit,posinit=posinit,direc="d",direcTestees=direcTestees))				
+				return(self.trouveCaseIA(posinit,posinit=posinit,direc="g",direcTestees=direcTestees))				
 
 	def tourIA(self) :
 		coordTir = ""
@@ -143,25 +154,40 @@ class Partie :
 			try :
 				self.tirer(coordTir)
 			except NoHarmException :
-				retour="aleau"
+				pass
 			except ToucheException :
-				retour="touche"
+				pass
 			except ToucheCouleException :
-				retour="coule"
+				pass
+			except PositionError :
+				self.tourIA()
 		else :
-			coord = listeTouche[0]
-			coordTir = self.trouveCaseIA(coord)
-			print(coordTir)
-			try :
-				self.tirer(coordTir)
-			except NoHarmException :
-				retour="aleau"
-			except ToucheException :
-				retour="touche"
-			except ToucheCouleException :
-				retour="coule"
-		self.tourTermine()
-		self.testFin()
+			if(self.previousDirec=="a") :
+				coord = listeTouche[0]
+				coordTir = self.trouveCaseIA(coord,direcTestees=[])
+				try :
+					self.tirer(coordTir)
+				except NoHarmException :
+					retour="aleau"
+				except ToucheException :
+					retour="touche"
+					self.previousDirec = self.tempDir
+				except ToucheCouleException :
+					self.previousDirec = "a"
+					retour="coule"
+			else :
+				coord = listeTouche[0]
+				coordTir = self.trouveCaseIA(coord,direc = self.previousDirec,posinit=coord,direcTestees=[])
+				try :
+					self.tirer(coordTir)
+				except NoHarmException :
+					retour="aleau"
+				except ToucheException :
+					retour="touche"
+					self.previousDirec = self.tempDir
+				except ToucheCouleException :
+					self.previousDirec = "a"
+					retour="coule"
 
 	def placerIA(self) :
 		self.placerIAPorteAvion()
@@ -246,30 +272,36 @@ class Partie :
 			try :
 				self.grille2.tirer(pos)
 			except ToucheCouleException :
+				self.tourTermine()
 				ordonnee, absisse = decoder(pos)
-				self.grilleAdverse1.changer(absisse,ordonnee,-3)
+				#self.grilleAdverse1.changer(absisse,ordonnee,-3)
 				raise ToucheCouleException("")
 			except ToucheException :
+				self.tourTermine()
 				ordonnee, absisse = decoder(pos)
-				self.grilleAdverse1.changer(absisse,ordonnee,-2)
+				#self.grilleAdverse1.changer(absisse,ordonnee,-2)
 				raise ToucheException("")
 			else :
-				self.grilleAdverse1.tirer(pos)
+				self.tourTermine()
+				#self.grilleAdverse1.tirer(pos)
 				raise NoHarmException("Dans l'eau.")
 
 		else :
 			try :
 				self.grille1.tirer(pos)
 			except ToucheCouleException :
+				self.tourTermine()
 				ordonnee, absisse = decoder(pos)
-				self.grilleAdverse2.changer(absisse,ordonnee,-3)
+				#self.grilleAdverse2.changer(absisse,ordonnee,-3)
 				raise ToucheCouleException("")
 			except ToucheException :
+				self.tourTermine()
 				ordonnee, absisse = decoder(pos)
-				self.grilleAdverse2.changer(absisse,ordonnee,-2)
+				#self.grilleAdverse2.changer(absisse,ordonnee,-2)
 				raise ToucheException("")
 			else :
-				self.grilleAdverse2.tirer(pos)
+				self.tourTermine()
+				#self.grilleAdverse2.tirer(pos)
 				raise NoHarmException("Dans l'eau.")
 
 	def tourTermine(self) :
@@ -279,7 +311,10 @@ class Partie :
 			self.tour = [self.joueur1]
 
 	def testFin(self) :
-		self.enCours = self.grille1.estVide() or self.grille2.estVide()
-		if(self.enCours) :
-			raise FinDuJeuException("Le jeu est fini.")
+		if(len(self.grille1.getCoordFromValue(1))==0) :
+			self.enCours = False
+			return(not self.enCours)
+		elif(len(self.grille2.getCoordFromValue(1))==0) :
+			self.enCours = False
+			return(not self.enCours)
 

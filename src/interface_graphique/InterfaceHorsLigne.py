@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3.8
 # -*-coding:Utf-8 -*
 from tkinter import *
+from tkinter.ttk import *
 import pickle
 from classes.Partie import *
 #from fonctions.fonctionsDamier import *
@@ -11,12 +12,14 @@ from fonctions.fonctionsInterface import *
 
 class InterfaceJeuHL(Frame) :
 	def __init__(self, fenetre,joueur, **kwargs):
-		fenetre.geometry("800x800")
+		#fenetre.geometry("800x800")
+		fenetre.title("BattleShip v1 (hors-ligne)")
 		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
 		self.pack(fill=BOTH)
 		self.fenetre = fenetre
 		self.joueur = joueur
 		self.aPlace = False
+		self.joueur.debutPartie()
 		self.IA = Joueur("Ordinateur")
 		self.d1 = Damier()
 		self.d2 = Damier()
@@ -26,36 +29,50 @@ class InterfaceJeuHL(Frame) :
 		self.partie.placerIA()
 		self.partie.tour[0] = self.joueur
 		self.d2 = self.partie.grille2
-		self.grillePerso = GrillePlacement(self,self.d1)
-		self.grilleTir = GrilleTir(self,self.d2)
+		self.grillePerso = GrillePlacement(self,self.partie)
+		self.grilleTir = GrilleTir(self,self.grillePerso,self.partie)
 		self.message.grid(row=1,column=15)
 		self.grillePerso.grid(row=2,column=15)
 		self.grilleTir.grid(row=3,column=15)
 		self.valider = Button(self,text="Valider",fg="white",bg="green",command=self.valider)
 		self.valider.grid(row=4,column=15)
-		#self.partie = Partie(self.joueur,Damier(),self.IA,Damier())
-		#self.boutonDepart = Button(self,text="Lancer la partie",bg="red",fg="white",state = "disabled",command=self.lancerPartie)
-		#self.boutonPlacer = Button(self,text="Placez vos bateaux",bg="green",fg="white",state="enabled")
+		self.quitter = Button(self,text="Quitter",command=self.quitter,fg="black",bg="red")
+		self.quitter.grid(row=6,column=15)
 		
+	def quitter(self) :
+		self.destroy()
+		self.fenetre.destroy()
+
 	def valider(self) :
 		if(self.grillePerso.remplie()) :
 			self.grillePerso.disableGrille()
 			self.grilleTir.enableGrille()
+			print(self.partie.grille1)
+			print(self.partie.grille2)
 			self.message.config(text="Etape 2 : Jouez")
+			self.valider.destroy()
+			self.grillePerso.valider.destroy()
+			self.grillePerso.pA.destroy()
+			self.grillePerso.cT.destroy()
+			self.grillePerso.c.destroy()
+			self.grillePerso.t.destroy()
+			self.grillePerso.sM.destroy()
+
 
 class GrillePlacement(Frame) :
-	def __init__(self,interface,damier,**kwargs) :
+	def __init__(self,interface,partie,**kwargs) :
 		Frame.__init__(self,interface,width = 330, height = 390, **kwargs)
 		self.etat = "enabled"
 		self.valider = Button(self,text="Valider",fg="white",bg="red",command=self.valider)
 		self.listeCases = []
 		self.interface = interface
-		self.damier = damier
+		self.partie=partie
+		self.damier = partie.grille1
 		listeAbs = ["A","B","C","D","E","F","G","H","I","J"]
 		listeOrd = ["1","2","3","4","5","6","7","8","9","10"]
 		for i in range(10):
 			Label(self,text=listeAbs[i],bg="white").grid(row=1,column=i+1+10)
-			Label(self,text=listeAbs[i],bg="white").grid(row=i+2,column=0+10)
+			Label(self,text=listeOrd[i],bg="white").grid(row=i+2,column=0+10)
 			for j in range(10):
 				valeur = IntVar()
 				jb = JBCheckbutton(self, variable=valeur,bg="white",command=self.checkCase)
@@ -86,6 +103,20 @@ class GrillePlacement(Frame) :
 		for bouton,val in self.listeCases :
 			if(val.get()==1) :
 				bouton.config(bg="grey")
+
+	def actualiser(self) :
+		for bouton, val in self.listeCases :
+			y, x = decoder(bouton.getCoord())
+			if(self.partie.grille1.getValue(x,y)==-1) :
+				bouton.config(bg = "grey")
+			elif(self.partie.grille1.getValue(x,y)==-2) :
+				bouton.config(bg = "red")
+			elif(self.partie.grille1.getValue(x,y)==-3) :
+				bouton.config(bg = "black")
+			elif(self.partie.grille1.getValue(x,y)==1) :
+				bouton.config(bg = "green")
+			else :
+				bouton.config(bg = "white")
 
 	def remplie(self) :
 		tst = True
@@ -134,7 +165,7 @@ class GrillePlacement(Frame) :
 						ymin = y1
 						direc = "droite"
 			if(tst) :
-				self.damier.placer(direc,encoder(xmin,ymin),PorteAvion())
+				self.partie.grille1.placer(direc,encoder(xmin,ymin),PorteAvion())
 				self.dejaPlace.append("pA")
 				for b in but :
 					b.config(state="disabled",bg="green")
@@ -174,7 +205,7 @@ class GrillePlacement(Frame) :
 						ymin = y1
 						direc = "droite"
 			if(tst) :
-				self.damier.placer(direc,encoder(xmin,ymin),Croiseur())
+				self.partie.grille1.placer(direc,encoder(xmin,ymin),Croiseur())
 				self.dejaPlace.append("c")
 				for b in but :
 					b.config(state="disabled",bg="green")
@@ -213,7 +244,7 @@ class GrillePlacement(Frame) :
 						ymin = y1
 						direc = "droite"
 			if(tst) :
-				self.damier.placer(direc,encoder(xmin,ymin),ContreTorpilleur())
+				self.partie.grille1.placer(direc,encoder(xmin,ymin),ContreTorpilleur())
 				self.dejaPlace.append("cT")
 				for b in but :
 					b.config(state="disabled",bg="green")
@@ -253,7 +284,7 @@ class GrillePlacement(Frame) :
 						direc = "droite"
 			if(tst) :
 				self.dejaPlace.append("sM")
-				self.damier.placer(direc,encoder(xmin,ymin),SousMarin())
+				self.partie.grille1.placer(direc,encoder(xmin,ymin),SousMarin())
 				for b in but :
 					b.config(state="disabled",bg="green")
 					self.sM.deselect()
@@ -289,7 +320,7 @@ class GrillePlacement(Frame) :
 					direc = "droite"
 			if(tst) :
 				self.dejaPlace.append("t")
-				self.damier.placer(direc,encoder(xmin,ymin),Torpilleur())
+				self.partie.grille1.placer(direc,encoder(xmin,ymin),Torpilleur())
 				for b in but :
 					b.config(state="disabled",bg="green")
 					self.t.deselect()
@@ -318,12 +349,14 @@ class JBCheckbutton(Checkbutton) :
 		return(self.coordonnee)
 
 class GrilleTir(Frame) :
-	def __init__(self,interface,damier,**kwargs) :
+	def __init__(self,interface,grille,partie,**kwargs) :
 		Frame.__init__(self,interface,width = 330,height = 390, **kwargs)
 		self.etat = "disabled"
-		self.listeBateau = damier.listeBateau
+		self.partie=partie
+		self.grillePerso = grille
+		self.listeBateau = partie.grille2.listeBateau
 		self.interface=interface
-		self.damier = damier
+		self.damier = partie.grille2
 		listeAbs = ["A","B","C","D","E","F","G","H","I","J"]
 		listeOrd = ["1","2","3","4","5","6","7","8","9","10"]
 		self.listeRadio = []
@@ -349,8 +382,9 @@ class GrilleTir(Frame) :
 
 		self.bouton_tirer = Button(self,text="Tirer",bg="red",fg="white",command=self.tirer,state="disabled",cursor="target")
 		self.bouton_tirer.grid(column=3,row=12,columnspan=5)
-		self.bouton_secours = Button(self,text="DEBLOQUE!",bg="red",fg="white",command=self.enableGrille)
-		self.bouton_secours.grid(column=3,row=13,columnspan=5)
+		#self.bouton_secours = Button(self,text="DEBLOQUE!",bg="red",fg="white",command=self.enableGrille)
+		#self.bouton_secours.grid(column=3,row=13,columnspan=5)
+		self.texte = Label(self,text="")
 
 	def enableGrille(self) :
 		self.etat="enabled"
@@ -362,7 +396,7 @@ class GrilleTir(Frame) :
 
 	def tirer(self) :
 		try :
-			self.damier.tirer(self.valeur.get())
+			self.partie.tirer(self.valeur.get())
 		except ToucheException :
 			for rb in self.listeRadio :
 				if(rb.cget("value")==self.valeur.get()) :
@@ -379,13 +413,39 @@ class GrilleTir(Frame) :
 					if(rb.cget("value")==coord) :
 						rb.config(bg="green",state="disabled")
 					rb.config(state="disabled")
-		else :
+		except NoHarmException :
 			for rb in self.listeRadio :
 				if(rb.cget("value")==self.valeur.get()) :
 					rb.config(bg="grey",state="disabled")
 				rb.config(state="disabled")
+
 		self.bouton_tirer.config(state="disabled")
 		self.etat = "disabled"
+		if(self.partie.testFin()) :
+			self.partie.joueur1.finPartie()
+			if(len(self.damier.getCoordFromValue(1))==0) :
+				self.interface.message.config(text="Vous avez gagné",fg="green")
+				
+				self.interface.joueur.partieHLGagnee()
+				if(self.interface.joueur.pseudo!="__localhost__") :
+					with open("../localdata/dataJoueur","wb") as file :
+						pickle.dump(self.interface.joueur,file)
+						file.close()
+			else :
+				self.interface.message.config(text="Vous avez perdu",fg="red")
+				try :
+					self.interface.joueur.partieHLPerdue()
+				except :
+					pass
+				if(self.interface.joueur.pseudo!="__localhost__") :
+					with open("../localdata/dataJoueur","wb") as file :
+						pickle.dump(self.interface.joueur,file)
+						file.close()
+		else :
+			self.partie.tourIA()
+			self.grillePerso.actualiser()
+			self.enableGrille()
+
 			
 			
 class InterfaceHorsLigne(Frame) :
@@ -397,13 +457,14 @@ class InterfaceHorsLigne(Frame) :
 		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
 		self.joueur = Joueur("__localhost__")
 		try :
-			file=open("../localdata/dataJoueur","rb")
+			file1=open("../localdata/dataJoueur","rb")
 		except FileNotFoundError :
 			self.joueur = Joueur("__localhost__")
 			with open("../localdata/dataJoueur","wb") as file :
 				pickle.dump(self.joueur,file)
+				file.close()
 		else :
-			self.joueur = pickle.load(file)
+			self.joueur = pickle.load(file1)
 		finally :
 			self.pack(fill=BOTH)
 			self.reinitTot()
@@ -423,12 +484,40 @@ class InterfaceHorsLigne(Frame) :
 	def reinitTot(self) :
 		
 		self.message = Label(self, text="Bienvenue "+self.joueur.pseudo)
+		self.message2 = Label(self,text="Niveau "+str(self.joueur.niveau))
+		self.hl = Label(self,text="Ratio hors-ligne : "+str(self.joueur.getRatioHL()))
+		self.el = Label(self,text="Ratio en ligne : "+str(self.joueur.getRatioEL()))
+		self.nbPart = Label(self,text="Nombre total de parties : "+str(self.joueur.nbPartiesEL+self.joueur.nbPartiesHL))
 		self.message.pack(side="top")
+		self.message2.pack()
+		self.hl.pack()
+		self.el.pack()
+		self.nbPart.pack()
+		style = Style()
+ 
+		style.theme_use('default')
+ 
+		style.configure("green.Horizontal.TProgressbar", background='green')
 
-
+		self.barre = Progressbar(self,length=100,style = "green.Horizontal.TProgressbar")
+		self.tempsDeJeu = Label(self,text="Temps de jeu : "+str(int(self.joueur.tempsDeJeuTotal//3600))+" heure(s) "+str((int(self.joueur.tempsDeJeuTotal%3600)//60))+" minute(s) et "+str(int(self.joueur.tempsDeJeuTotal%60))+" seconde(s).")
+		if(self.joueur.niveau==1) :
+			self.barre["value"] = self.joueur.xp/5
+		elif(self.joueur.niveau==2) :
+			self.barre["value"] = self.joueur.xp/15
+		elif(self.joueur.niveau==3) :
+			self.barre["value"] = self.joueur.xp/50
+		elif(self.joueur.niveau==4) :
+			self.barre["value"] = self.joueur.xp/150
+		elif(self.joueur.niveau==5) :
+			self.barre["value"] = self.joueur.xp/200
+		else :
+			self.barre["value"] = 100
+		self.tempsDeJeu.pack()
+		self.barre.pack()
 		self.bouton_co = Button(self, text="Lancez une partie !", fg="white",background="blue", command=self.lancerJeu)
 		self.bouton_co.pack()
-		self.bouton_quitter = Button(self, text="Quitter", command=self.quitter)
+		self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,bg="red",fg="white")
 		self.bouton_quitter.pack(side="bottom")
 
 	def quitter(self) :

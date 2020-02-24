@@ -20,6 +20,13 @@ class Joueur :
 		self.creation = time.time()
 		self.enAttente = False
 
+	def debutPartie(self) :
+		self.tempsDebutJeu = time.time()
+
+	def finPartie(self) :
+		self.tempsDeJeuTotal += time.time() - self.tempsDebutJeu
+		self.tempsDebutJeu = 0.0
+
 	def addXp(self,xp) :
 		self.xp+=xp
 		self.verifieLvl()
@@ -144,31 +151,31 @@ class Joueur :
 			if(self.xp>=500):
 				self.niveau+=1
 				self.xp-=500
-				raise NewLevelException("Vous passez niveau 2")
+				#raise NewLevelException("Vous passez niveau 2")
 			else :
 				pass
 		elif(self.niveau==2) :
 			if(self.xp>=1500) :
 				self.xp-=1500
-				raise NewLevelException("Vous passez niveau 3")
+				#raise NewLevelException("Vous passez niveau 3")
 			else :
 				pass
 		elif(self.niveau==3) :
 			if(self.xp>=5000) :
 				self.xp-=5000
-				raise NewLevelException("Vous passez niveau 4")
+				#raise NewLevelException("Vous passez niveau 4")
 			else :
 				pass
 		elif(self.niveau==4) :
 			if(self.xp>=15000) :
 				self.xp-=15000
-				raise NewLevelException("Vous passez niveau 5")
+				#raise NewLevelException("Vous passez niveau 5")
 			else :
 				pass
 		elif(self.niveau==5) :
 			if(self.xp>=20000) :
 				self.xp-=20000
-				raise NewLevelException("Vous passez niveau 6")
+				#raise NewLevelException("Vous passez niveau 6")
 			else :
 				pass
 		else :

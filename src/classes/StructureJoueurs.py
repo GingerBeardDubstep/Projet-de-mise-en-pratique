@@ -25,6 +25,23 @@ class StructureJoueurs :
 		else :
 			self.dicoJoueurs[clef] = joueur
 
+	def actualiserJoueur(self,joueur,login,mdp) :
+		clef = hashlib.sha1((mdp+login+mdp).encode()).hexdigest()
+		if(clef in self.dicoJoueurs.keys()) :
+			if(self.dicoJoueurs[clef].niveau<joueur.niveau) :
+				self.dicoJoueurs[clef]=joueur
+				self.editStructure()
+			elif(self.dicoJoueurs[clef].niveau==joueur.niveau) :
+				if(self.dicoJoueurs[clef].xp<joueur.xp) :
+					self.dicoJoueurs[clef]=joueur
+					self.editStructure()
+				else :
+					raise NoActualException("Pas d'actualisation")
+			else :
+				raise NoActualException("pas d'actualisation")
+		else :
+			raise NoPlayerFoundException("Login ou mot de passe incorrrect")
+
 	def getJoueur(self,login,mdp) :
 		_temp = mdp+login+mdp
 		clef = hashlib.sha1(_temp.encode()).hexdigest()
@@ -35,13 +52,14 @@ class StructureJoueurs :
 		raise NoPlayerFoundException("Login ou mot de passe incorect")
 
 	def editStructure(self) :
-		with open("data.txt","wb") as file :
-			pickler = pickle.Pickler(file)
-			pickler.dump(self)
+		file = open("../serveurdata/data","wb")
+		pickler = pickle.Pickler(file)
+		pickler.dump(self)
+		file.close()
 
 	def importStructure(self) :
 		try :
-			file=open("data.txt","rb")
+			file=open("../serveurdata/data","rb")
 		except FileNotFoundError :
 			self.dicoJoueurs = dict()
 			self.listeLogin =[]
@@ -50,4 +68,5 @@ class StructureJoueurs :
 			_temp = depickler.load()
 			self.dicoJoueurs = dict(_temp.dicoJoueurs)
 			self.listeLogin = list(_temp.listeLogin)
+			file.close()
 		
