@@ -11,6 +11,7 @@ from interface_graphique.InterfaceHorsLigne import *
 import socket
 import os
 import time
+from interface_graphique.InterfaceJeu import *
 
 argFonfNoir = dict()
 argFonfNoir["fg"] = "white"
@@ -60,7 +61,7 @@ class InterfaceConnexion(Frame):
 					joueurActuel=pickle.dumps(joueurActuel)
 					self.serveur.send(joueurActuel)
 					_osef = self.serveur.recv(1024)
-					print(_osef.decode())
+					#print(_osef.decode())
 			self.serveur.send(b"tentative connexion")
 			time.sleep(0.1)
 			self.serveur.send(login.encode())
@@ -70,6 +71,10 @@ class InterfaceConnexion(Frame):
 			
 			if(retour == b"False") :
 				self.message.config(text="Mot de passe ou login errone",fg="red")
+				self.ligne_log.config(background="red")
+				self.ligne_key.config(background="red")
+			elif(retour == b"deja connecte") :
+				self.message.config(text="Ce compte est déjà connecté",fg="red")
 				self.ligne_log.config(background="red")
 				self.ligne_key.config(background="red")
 			else :
@@ -145,7 +150,7 @@ class InterfaceConnexion(Frame):
 			self.bouton_re = Button(self, text="Inscrivez vous", fg="red", command=self.inscription,background="black")
 			self.bouton_re.pack(side="right")
 
-			self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,background="red")
+			self.bouton_quitter = Button(self, text="Quitter", command=self.quit,background="red")
 			self.bouton_quitter.pack(side="bottom",pady=5)
 			self.bouton_retour = Button(self, text="Retour", command=self.retour,**argFonfNoir)
 			self.bouton_retour.pack(side="bottom",pady=5)
@@ -159,7 +164,7 @@ class InterfaceConnexion(Frame):
 		os.system("python3.8 -m mains.mainDebut")
 
 
-	def quitter(self) :
+	def quit(self) :
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
 		self.destroy()
@@ -199,6 +204,7 @@ class InterfaceUtilisateur(Frame):
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	def __init__(self, serveur,fenetre,joueur, **kwargs):
+		fenetre.geometry("700x284")
 		self.fenetre = fenetre
 		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
 		self.serveur=serveur
@@ -221,6 +227,7 @@ class InterfaceUtilisateur(Frame):
 		style.configure("blue.Horizontal.TProgressbar", background='blue')
 		self.barre2 = Progressbar(self,length=100,style = "blue.Horizontal.TProgressbar",mode="determinate")
 		self.barre2["value"]=0
+		self.messageCharge = Label(self,text="")
 
 		self.barre = Progressbar(self,length=100,style = "green.Horizontal.TProgressbar")
 		self.tempsDeJeu = Label(self,text="Temps de jeu : "+str(int(self.joueur.tempsDeJeuTotal//3600))+" heure(s) "+str((int(self.joueur.tempsDeJeuTotal%3600)//60))+" minute(s) et "+str(int(self.joueur.tempsDeJeuTotal%60))+" seconde(s).")
@@ -236,50 +243,89 @@ class InterfaceUtilisateur(Frame):
 			self.barre["value"] = self.joueur.xp/200
 		else :
 			self.barre["value"] = 100
-		self.messageC = Label(self,text="Recherche d'adversaire : ")
 		self.tempsDeJeu.pack()
 		self.barre.pack()
 		self.bouton_co = Button(self, text="Chercher un adversaire", fg="white",background="blue", command=self.lancerJeu)
 		self.bouton_co.pack()
-		self.bouton_quitter = Button(self, text="Quitter", command=self.quitter,bg="red",fg="white")
+		self.bouton_quitter = Button(self, text="Quitter", command=self.quit,bg="red",fg="white")
+		self.tstCherche = False
 		self.bouton_quitter.pack(side="bottom")
 
 	def lancerJeu(self) :
 		retour = "pas encore"
+		self.bouton_co.config(state = "disabled")
+		self.bouton_quitter.config(state="disabled")
+		self.messageC = Label(self,text="Recherche d'adversaire : ")
 		self.messageC.pack()
+		self.bouton_arret_recherche = Button(self, text="Arret recherche",fg="white",bg="red",command=self.arretAttente)
+		
+
+		style = Style()
+ 
+		style.theme_use('default')
+ 
+		style.configure("green.Horizontal.TProgressbar", background='green')
+
+		style.configure("blue.Horizontal.TProgressbar", background='blue')
+		self.barre2 = Progressbar(self,length=100,style = "blue.Horizontal.TProgressbar",mode="determinate")
+		self.barre2["value"]=0
 			
 		self.barre2.pack()
+		self.bouton_arret_recherche.pack()
 		self.serveur.send(b"cherche")
 		retour = self.serveur.recv(1024).decode()
-		print(retour)
+		#print(retour)
 		time.sleep(0.1)
-		while(retour!="trouve") :
+		self.tstCherche = True
+		while(self.tstCherche) :
+			self.tstCherche = (retour!="trouve")
 			self.serveur.send(b"attente")
 			retour = self.serveur.recv(1024).decode()
 			self.barre2.step()
 			self.barre2.update()
 			self.update()
+		self.messageCharge.destroy()
+		self.messageC.destroy()
+		self.barre2.destroy()
 		if(retour=="trouve") :
-			self.messageC.destroy()
-			self.barre2.destroy()
-			Label(self,text="Joueur Trouvé !").pack(side="bottom")
+			self.messageCharge = Label(self,text="Joueur Trouvé !")
+			self.messageCharge.pack(side="bottom")
+			self.messageCharge.update()
+			self.update()
+			time.sleep(2)
+			self.destroy()
+			self.fenetre.geometry("500x700")
+			interface = InterfaceJeuEL(self.fenetre,self.serveur,self.joueur)
+			interface.mainloop()
 		else :
-			self.messageC.destroy()
-			self.barre2.destroy()
-			Label(self,text="Erreur, pas de joueur trouvé").pack(side="bottom")
+			self.messageCharge = Label(self,text="Pas de joueur trouvé")
+			self.messageCharge.pack(side="bottom")
+
+	def arretAttente(self) :
+		self.tstCherche = False
+		self.tstCherche = False
+		self.serveur.send(b"arret attente")
+		self.bouton_co.config(state = "normal")
+		self.bouton_quitter.config(state="normal")
+		self.barre2.destroy()
+		self.messageC.destroy()
+		self.messageCharge.destroy()
+		self.bouton_arret_recherche.destroy()
 
 
 	def quit(self) :
+		self.serveur.send(b"arret attente")
+		time.sleep(0.1)
+		self.serveur.send(b"joueur deconnecte")
+		time.sleep(0.1)
+		self.serveur.send(pickle.dumps(self.joueur))
+		time.sleep(0.1)
 		self.serveur.send(b"fin exit(0)")
 		self.serveur.close()
 		self.destroy()
 		self.fenetre.destroy()
 
-	def quitter(self) :
-		self.serveur.send(b"fin exit(0)")
-		self.serveur.close()
-		self.destroy()
-		self.fenetre.destroy()
+
 
 
 class InterfaceInscription(Frame):

@@ -28,17 +28,20 @@ class StructureJoueurs :
 	def actualiserJoueur(self,joueur,login,mdp) :
 		clef = hashlib.sha1((mdp+login+mdp).encode()).hexdigest()
 		if(clef in self.dicoJoueurs.keys()) :
-			if(self.dicoJoueurs[clef].niveau<joueur.niveau) :
-				self.dicoJoueurs[clef]=joueur
-				self.editStructure()
-			elif(self.dicoJoueurs[clef].niveau==joueur.niveau) :
-				if(self.dicoJoueurs[clef].xp<joueur.xp) :
+			if(self.dicoJoueurs[clef].pseudo==joueur.pseudo) :
+				if(self.dicoJoueurs[clef].niveau<joueur.niveau) :
 					self.dicoJoueurs[clef]=joueur
 					self.editStructure()
+				elif(self.dicoJoueurs[clef].niveau==joueur.niveau) :
+					if(self.dicoJoueurs[clef].xp<joueur.xp) :
+						self.dicoJoueurs[clef]=joueur
+						self.editStructure()
+					else :
+						raise NoActualException("Pas d'actualisation")
 				else :
-					raise NoActualException("Pas d'actualisation")
+					raise NoActualException("pas d'actualisation")
 			else :
-				raise NoActualException("pas d'actualisation")
+				raise NoActualException("Mauvais pseudo")
 		else :
 			raise NoPlayerFoundException("Login ou mot de passe incorrrect")
 

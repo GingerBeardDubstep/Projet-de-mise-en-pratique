@@ -14,7 +14,7 @@ class InterfaceJeuHL(Frame) :
 	def __init__(self, fenetre,joueur, **kwargs):
 		#fenetre.geometry("800x800")
 		fenetre.title("BattleShip v1 (hors-ligne)")
-		Frame.__init__(self, fenetre, width=(7680/2), height=(5760/2), **kwargs)
+		Frame.__init__(self, fenetre, width=500, height=700, **kwargs)
 		self.pack(fill=BOTH)
 		self.fenetre = fenetre
 		self.joueur = joueur
@@ -24,20 +24,20 @@ class InterfaceJeuHL(Frame) :
 		self.d1 = Damier()
 		self.d2 = Damier()
 		self.message = Label(self,text="Etape 1 : Placez vos bateaux")
-		self.message.grid(row=0,column=15)
+		self.message.pack(fill=X)
 		self.partie = Partie(self.joueur,self.d1,self.IA,self.d2)
 		self.partie.placerIA()
 		self.partie.tour[0] = self.joueur
 		self.d2 = self.partie.grille2
 		self.grillePerso = GrillePlacement(self,self.partie)
 		self.grilleTir = GrilleTir(self,self.grillePerso,self.partie)
-		self.message.grid(row=1,column=15)
-		self.grillePerso.grid(row=2,column=15)
-		self.grilleTir.grid(row=3,column=15)
+		self.message.pack()
+		self.grillePerso.pack()
+		self.grilleTir.pack(padx=60)
 		self.valider = Button(self,text="Valider",fg="white",bg="green",command=self.valider)
-		self.valider.grid(row=4,column=15)
+		self.valider.pack()
 		self.quitter = Button(self,text="Quitter",command=self.quitter,fg="black",bg="red")
-		self.quitter.grid(row=6,column=15)
+		self.quitter.pack()
 		
 	def quitter(self) :
 		self.destroy()
@@ -52,57 +52,38 @@ class InterfaceJeuHL(Frame) :
 			self.message.config(text="Etape 2 : Jouez")
 			self.valider.destroy()
 			self.grillePerso.valider.destroy()
-			self.grillePerso.pA.destroy()
-			self.grillePerso.cT.destroy()
-			self.grillePerso.c.destroy()
-			self.grillePerso.t.destroy()
-			self.grillePerso.sM.destroy()
+			self.grillePerso.choix.pA.destroy()
+			self.grillePerso.choix.cT.destroy()
+			self.grillePerso.choix.c.destroy()
+			self.grillePerso.choix.t.destroy()
+			self.grillePerso.choix.sM.destroy()
 
-
-class GrillePlacement(Frame) :
+class FramePlacementGrille(Frame) :
 	def __init__(self,interface,partie,**kwargs) :
-		Frame.__init__(self,interface,width = 330, height = 390, **kwargs)
-		self.etat = "enabled"
-		self.valider = Button(self,text="Valider",fg="white",bg="red",command=self.valider)
-		self.listeCases = []
 		self.interface = interface
-		self.partie=partie
-		self.damier = partie.grille1
+		Frame.__init__(self,interface,width = 300, height = 300, **kwargs)
+		self.partie = partie
+		self.listeCases = []
 		listeAbs = ["A","B","C","D","E","F","G","H","I","J"]
 		listeOrd = ["1","2","3","4","5","6","7","8","9","10"]
 		for i in range(10):
-			Label(self,text=listeAbs[i],bg="white").grid(row=1,column=i+1+10)
-			Label(self,text=listeOrd[i],bg="white").grid(row=i+2,column=0+10)
+			Label(self,text=listeAbs[i],bg="white").grid(row=1,column=i+1+5)
+			Label(self,text=listeOrd[i],bg="white").grid(row=i+2,column=0+5)
 			for j in range(10):
 				valeur = IntVar()
 				jb = JBCheckbutton(self, variable=valeur,bg="white",command=self.checkCase)
-				jb.grid(row=j+2, column=i+1+10)
+				jb.grid(row=j+2, column=i+1+5)
 				jb.coordonnee = encoder(i,j)
 				jb.deselect()
 				self.listeCases.append((jb,valeur))
 
-		self.val_bateau = StringVar()
-		self.pA = Radiobutton(self,variable=self.val_bateau,text="Porte-Avion(5)",value="pA")
-		self.c = Radiobutton(self,variable=self.val_bateau,text="Croiseur(4)",value="c")
-		self.cT = Radiobutton(self,variable=self.val_bateau,text="Contre-Torpilleur(3)",value="cT")
-		self.sM = Radiobutton(self,variable=self.val_bateau,text="Sous-Marin(3)",value="sM")
-		self.t = Radiobutton(self,variable=self.val_bateau,text="Torpilleur(2)",value="t")
-
-		self.dejaPlace = []
-
-		self.pA.grid(row=12,column=6,columnspan=10)
-		self.c.grid(row=12,column=14,columnspan=10)
-		self.cT.grid(row=12,column=22,columnspan=10)
-		self.sM.grid(row=13,column=9,columnspan=10)
-		self.t.grid(row=13,column=16,columnspan=10)
-		self.t.deselect()
-
-		self.valider.grid(row=14,column=15,columnspan=10)
-
 	def checkCase(self) :
 		for bouton,val in self.listeCases :
 			if(val.get()==1) :
-				bouton.config(bg="grey")
+				if(bouton.cget("bg")=="white") :
+					bouton.config(bg="grey")
+				else :
+					bouton.config(bg="white")
 
 	def actualiser(self) :
 		for bouton, val in self.listeCases :
@@ -118,6 +99,31 @@ class GrillePlacement(Frame) :
 			else :
 				bouton.config(bg = "white")
 
+	def reinit(self) :
+		for jb,val in self.listeCases :
+			if(jb.cget("state")!="disabled") :
+				val.set(0)
+
+class FrameChoixBateau(Frame) :
+	def __init__(self,interface,**kwargs) :
+		Frame.__init__(self,interface,**kwargs)
+		self.val_bateau = StringVar()
+		self.pA = Radiobutton(self,variable=self.val_bateau,text="Porte-Avion(5)     ",value="pA")
+		self.c = Radiobutton(self,variable=self.val_bateau,text="Croiseur(4)",value="c")
+		self.cT = Radiobutton(self,variable=self.val_bateau,text="Contre-Torpilleur(3)",value="cT")
+		self.sM = Radiobutton(self,variable=self.val_bateau,text="Sous-Marin(3)",value="sM")
+		self.t = Radiobutton(self,variable=self.val_bateau,text="Torpilleur(2)",value="t")
+
+		self.dejaPlace = []
+
+		self.pA.grid(row=0,column=0,padx=1,columnspan=2)
+		self.c.grid(row=0,column=2,padx=1,columnspan=2)
+
+		self.cT.grid(row=0,column=4,padx=1)
+		self.sM.grid(row=1,column=1,padx=1,columnspan=3)
+		self.t.grid(row=1,column=3,padx=1,columnspan=2)
+		self.t.deselect()
+
 	def remplie(self) :
 		tst = True
 		if(self.pA.cget("state")=="normal") :
@@ -132,15 +138,35 @@ class GrillePlacement(Frame) :
 			tst=False
 		return(tst)
 
+class GrillePlacement(Frame) :
+	def __init__(self,interface,partie,**kwargs) :
+		Frame.__init__(self,interface,width = 330, height = 390, **kwargs)
+		self.etat = "enabled"
+		self.valider = Button(self,text="Valider",fg="white",bg="red",command=self.valider)
+		self.interface = interface
+		self.partie=partie
+		self.damier = partie.grille1
+		self.grille = FramePlacementGrille(self,self.partie)
+		self.grille.pack()
+		self.choix = FrameChoixBateau(self)
+		self.choix.pack()
+		self.valider.pack()
+
+	def actualiser(self) :
+		self.grille.actualiser()
+
+	def remplie(self) :
+		return(self.choix.remplie())
+
 	def valider(self) :
-		if(self.val_bateau.get()=="pA" and "pA" not in self.dejaPlace) :
+		if(self.choix.val_bateau.get()=="pA" and "pA" not in self.choix.dejaPlace) :
 			tst = False
 			xmin=-1
 			ymin=-1
 			direc = ""
 			pos = []
 			but = []
-			for bouton,val in self.listeCases :
+			for bouton,val in self.grille.listeCases :
 				if(val.get()==1) :
 					val.set(0)
 					bouton.config(bg="white")
@@ -166,22 +192,22 @@ class GrillePlacement(Frame) :
 						direc = "droite"
 			if(tst) :
 				self.partie.grille1.placer(direc,encoder(xmin,ymin),PorteAvion())
-				self.dejaPlace.append("pA")
+				self.choix.dejaPlace.append("pA")
 				for b in but :
 					b.config(state="disabled",bg="green")
-					self.pA.deselect()
-					self.pA.config(state="disabled")
+					self.choix.pA.deselect()
+					self.choix.pA.config(state="disabled")
 					
 			else :
-				self.reinit()
-		elif(self.val_bateau.get()=="c" and "c" not in self.dejaPlace) :
+				self.grille.reinit()
+		elif(self.choix.val_bateau.get()=="c" and "c" not in self.choix.dejaPlace) :
 			tst = False
 			xmin=-1
 			ymin=-1
 			direc = ""
 			pos = []
 			but = []
-			for bouton,val in self.listeCases :
+			for bouton,val in self.grille.listeCases :
 				if(val.get()==1) :
 					val.set(0)
 					bouton.config(bg="white")
@@ -206,22 +232,22 @@ class GrillePlacement(Frame) :
 						direc = "droite"
 			if(tst) :
 				self.partie.grille1.placer(direc,encoder(xmin,ymin),Croiseur())
-				self.dejaPlace.append("c")
+				self.choix.dejaPlace.append("c")
 				for b in but :
 					b.config(state="disabled",bg="green")
-					self.c.deselect()
-					self.c.config(state="disabled")
+					self.choix.c.deselect()
+					self.choix.c.config(state="disabled")
 					
 			else :
-				self.reinit()
-		elif(self.val_bateau.get()=="cT" and "cT" not in self.dejaPlace) :
+				self.grille.reinit()
+		elif(self.choix.val_bateau.get()=="cT" and "cT" not in self.choix.dejaPlace) :
 			tst = False
 			xmin=-1
 			ymin=-1
 			direc = ""
 			pos = []
 			but = []
-			for bouton,val in self.listeCases :
+			for bouton,val in self.grille.listeCases :
 				if(val.get()==1) :
 					val.set(0)
 					bouton.config(bg="white")
@@ -245,22 +271,22 @@ class GrillePlacement(Frame) :
 						direc = "droite"
 			if(tst) :
 				self.partie.grille1.placer(direc,encoder(xmin,ymin),ContreTorpilleur())
-				self.dejaPlace.append("cT")
+				self.choix.dejaPlace.append("cT")
 				for b in but :
 					b.config(state="disabled",bg="green")
-					self.cT.deselect()
-					self.cT.config(state="disabled")
+					self.choix.cT.deselect()
+					self.choix.cT.config(state="disabled")
 					
 			else :
-				self.reinit()
-		elif(self.val_bateau.get()=="sM" and "sM" not in self.dejaPlace) :
+				self.grille.reinit()
+		elif(self.choix.val_bateau.get()=="sM" and "sM" not in self.choix.dejaPlace) :
 			tst = False
 			xmin=-1
 			ymin=-1
 			direc = ""
 			pos = []
 			but = []
-			for bouton,val in self.listeCases :
+			for bouton,val in self.grille.listeCases :
 				if(val.get()==1) :
 					val.set(0)
 					bouton.config(bg="white")
@@ -283,23 +309,23 @@ class GrillePlacement(Frame) :
 						ymin = y1
 						direc = "droite"
 			if(tst) :
-				self.dejaPlace.append("sM")
+				self.choix.dejaPlace.append("sM")
 				self.partie.grille1.placer(direc,encoder(xmin,ymin),SousMarin())
 				for b in but :
 					b.config(state="disabled",bg="green")
-					self.sM.deselect()
-					self.sM.config(state="disabled")
+					self.choix.sM.deselect()
+					self.choix.sM.config(state="disabled")
 					
 			else :
-				self.reinit()
-		elif(self.val_bateau.get()=="t" and "t" not in self.dejaPlace) :
+				self.grille.reinit()
+		elif(self.choix.val_bateau.get()=="t" and "t" not in self.choix.dejaPlace) :
 			tst = False
 			xmin=-1
 			ymin=-1
 			direc = ""
 			pos = []
 			but = []
-			for bouton,val in self.listeCases :
+			for bouton,val in self.grille.listeCases :
 				if(val.get()==1) :
 					val.set(0)
 					bouton.config(bg="white")
@@ -319,22 +345,18 @@ class GrillePlacement(Frame) :
 					ymin=y1
 					direc = "droite"
 			if(tst) :
-				self.dejaPlace.append("t")
+				self.choix.dejaPlace.append("t")
 				self.partie.grille1.placer(direc,encoder(xmin,ymin),Torpilleur())
 				for b in but :
 					b.config(state="disabled",bg="green")
-					self.t.deselect()
-					self.t.config(state="disabled")
+					self.choix.t.deselect()
+					self.choix.t.config(state="disabled")
 					
 			else :
-				self.reinit()
-	def reinit(self) :
-		for jb,val in self.listeCases :
-			if(jb.cget("state")!="disabled") :
-				val.set(0)
+				self.grille.reinit()
 
 	def disableGrille(self) :
-		for bouton,val in self.listeCases :
+		for bouton,val in self.grille.listeCases :
 			bouton.config(state="disabled")
 			val.set(0)
 		
@@ -360,10 +382,11 @@ class GrilleTir(Frame) :
 		listeAbs = ["A","B","C","D","E","F","G","H","I","J"]
 		listeOrd = ["1","2","3","4","5","6","7","8","9","10"]
 		self.listeRadio = []
+		Label(self).grid(row = 0,column=0)
 
 		for i in range(10):
-			Label(self,text=listeAbs[i],bg="white").grid(column=i+1,row=0)
-			Label(self,text=listeOrd[i],bg="white").grid(column=0,row=i+1)
+			Label(self,text=listeAbs[i],bg="white").grid(column=i+1+15,row=0)
+			Label(self,text=listeOrd[i],bg="white").grid(column=0+15,row=i+1)
 		self.valeur=StringVar()
 		for i in range(10):
 			for j in range(10):
@@ -376,12 +399,12 @@ class GrilleTir(Frame) :
 					rb.config(bg="green",fg="red",state="disabled")
 				else :
 					rb.config(bg="white",fg="black",state="disabled")
-				rb.grid(row=j+1, column=i+1)
+				rb.grid(row=j+1, column=15+i+1)
 				rb.deselect()
 				self.listeRadio.append(rb)
 
 		self.bouton_tirer = Button(self,text="Tirer",bg="red",fg="white",command=self.tirer,state="disabled",cursor="target")
-		self.bouton_tirer.grid(column=3,row=12,columnspan=5)
+		self.bouton_tirer.grid(column=3+15,row=17,columnspan=5)
 		#self.bouton_secours = Button(self,text="DEBLOQUE!",bg="red",fg="white",command=self.enableGrille)
 		#self.bouton_secours.grid(column=3,row=13,columnspan=5)
 		self.texte = Label(self,text="")
@@ -535,7 +558,7 @@ class InterfaceHorsLigne(Frame) :
 			self.destroy()
 			self.fenetre.destroy()
 			fenetre = Tk()
-			fenetre.geometry("800x800")
+			fenetre.geometry("500x700")
 			instance = InterfaceJeuHL(fenetre,self.joueur)
 			instance.mainloop()
 
@@ -589,7 +612,7 @@ class InterfaceQuestion(Frame) :
 		self.destroy()
 		self.fenetre.destroy()
 		fenetre = Tk()
-		fenetre.geometry("800x800")
+		fenetre.geometry("600x600")
 		instance = InterfaceJeuHL(fenetre,Joueur("__localhost__"))
 		instance.mainloop()
 

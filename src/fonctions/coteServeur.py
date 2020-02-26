@@ -5,6 +5,7 @@ import socket
 import select
 from classes.Joueur import *
 from classes.StructureJoueurs import *
+from classes.Partie import *
 
 def initialiserServeur() :
 	serveur = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -16,6 +17,10 @@ def lecture(serveur) :
 	liste_connexions = []
 	liste_attente = []
 	liste_enJeu = []
+	liste_joueurs_connectes = []
+	liste_parties = []
+	liste_abandon = []
+	damiers_en_stock = []
 	tst = True
 	try :
 		while(tst) :
@@ -35,6 +40,102 @@ def lecture(serveur) :
 				for el in aLire :
 					msg = el.recv(1024)
 					msg = msg.decode()
+					_temp = False
+					if(msg.lower() == "fin partie") :
+						joueur = pickle.loads(el.recv(1024))
+						structure = StructureJoueurs()
+						structure.importStructure()
+						cle=""
+						for clef in structure.dicoJoueurs.keys() :
+							if(structure.dicoJoueurs[clef].pseudo==joueur.pseudo) :
+								cle=clef
+						structure.dicoJoueurs[cle] = joueur
+						structure.editStructure()
+						for el1,el2,partie in liste_parties :
+							if(el is el1) :
+								liste_parties.remove((el1,el2,partie))
+							if(el is el2) :
+								liste_parties.remove((el1,el2,partie))
+
+						for el1,el2 in liste_enJeu :
+							if((el is el1) or (el is el2)) :
+								liste_enJeu.remove((el1,el2))
+					if(msg.lower() == "a joue") :
+						partie = pickle.loads(el.recv(9999))
+						tstFini = partie.testFin()
+						for el1, el2 in liste_enJeu :
+							if(el is el1) :
+								if(tstFini) :
+									el2.send(b"perdu")
+								else :
+									el2.send(b"a toi")
+									time.sleep(0.1)
+									el2.send(pickle.dumps(partie))
+							elif(el is el2) :
+								if(tstFini) :
+									el1.send(b"perdu")
+								else :
+									el1.send(b"a toi")
+									time.sleep(0.1)
+									el1.send(pickle.dumps(partie))
+					if(msg.lower() == "envoi damier") :
+						damier = pickle.loads(el.recv(1024))
+						joueur = pickle.loads(el.recv(1024))
+						el.send(b"OK")
+						damiers_en_stock.append((el,damier,joueur))
+					if(msg.lower() == "attente damier") :
+						adversaire = None
+						for el1,el2 in liste_enJeu :
+							if(el is el1) :
+								adversaire = el2
+							elif(el is el2) :
+								adversaire = el1
+						tstDamier = False
+						damier1 = None
+						damier2 = None
+						joueur1 = None
+						joueur2 = None
+						for co,damier,joueur in damiers_en_stock :
+							if(co is adversaire) :
+								tstDamier = True
+								damier2 = damier
+								joueur2 = joueur
+							elif(co is el) :
+								damier1 = damier
+								joueur1 = joueur
+						if(tstDamier) :
+							print("v1")
+							el.send(b"partie")
+							time.sleep(0.1)
+							damiers_en_stock.remove((el,damier1,joueur1))
+							damiers_en_stock.remove((adversaire,damier2,joueur2))
+							partie = Partie(joueur1,damier1,joueur2,damier2)
+							el.send(pickle.dumps(partie))
+							liste_parties.append((el,adversaire,partie))
+						else :
+							tstBoucle = False
+							for co1,co2,part in liste_parties :
+								if((el is co1) or (el is co2)) :
+									print("v2")
+									el.send(b"partie")
+									time.sleep(0.1)
+									el.send(pickle.dumps(part))
+									tstBoucle = True
+							if(not tstBoucle) :
+								el.send(b"attente")
+
+					if(msg.lower() == "arret attente") :
+						for elem in liste_attente :
+							if(elem is el) :
+								_temp =True
+						if(_temp) :
+							liste_attente.remove(el)
+							cpt=0
+						for el1,el2 in liste_enJeu :
+							if(el is el1 or el is el2) :
+								liste_enJeu.remove((el1,el2))
+					else :
+						pass
 					if(msg.lower() == "cherche") :							
 						liste_attente.append(el)
 						el.send(b"pas encore")
@@ -43,7 +144,7 @@ def lecture(serveur) :
 						for el1,el2 in liste_enJeu :
 							if((el is el1) or (el is el2)) :
 								el.send(b"trouve")
-								tst=True
+								tst1=True
 						if(tst1) :
 							pass
 						else :
@@ -92,8 +193,12 @@ def lecture(serveur) :
 						except NoPlayerFoundException :
 							el.send(b"False")
 						else :
-							joueur = pickle.dumps(joueur)
-							el.send(joueur)
+							if(joueur.pseudo in liste_joueurs_connectes) :
+								el.send(b"deja connecte")
+							else :
+								liste_joueurs_connectes.append(joueur.pseudo)
+								joueur = pickle.dumps(joueur)
+								el.send(joueur)
 					elif(msg.lower()=="tentative inscription") :
 						structure = StructureJoueurs()
 						structure.importStructure()
@@ -112,7 +217,16 @@ def lecture(serveur) :
 							structure.editStructure()
 							el.send(b"Done")
 
+					elif(msg.lower()=="joueur deconnecte") :
+						joueur = pickle.loads(el.recv(1024))
+						liste_joueurs_connectes.remove(joueur.pseudo)
+
 					elif(msg.lower()=="fin exit(0)") :
+						for el1, el2 in liste_enJeu :
+							if(el is el1) :
+								el2.send(b"partie interrompue")
+							elif(el is el2) :
+								el1.send(b"partie interrompue")
 						el.close()
 						liste_connexions.remove(el)
 						break

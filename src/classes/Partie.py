@@ -21,6 +21,8 @@ class Partie :
 		self.posinit = "Z20"
 		self.previousDirec = "a"
 		self.tempDir = ""
+		self.gagnant = None
+		self.perdant = None
 
 	def initTest(self):
 		pass
@@ -313,8 +315,12 @@ class Partie :
 	def testFin(self) :
 		if(len(self.grille1.getCoordFromValue(1))==0) :
 			self.enCours = False
+			self.gagnant = self.joueur2
+			self.perdant = self.joueur1
 			return(not self.enCours)
 		elif(len(self.grille2.getCoordFromValue(1))==0) :
 			self.enCours = False
+			self.gagnant = self.joueur1
+			self.perdant = self.joueur2
 			return(not self.enCours)
 
