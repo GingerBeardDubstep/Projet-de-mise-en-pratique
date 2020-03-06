@@ -7,8 +7,8 @@ from cx_Freeze import setup, Executable
 
 # On appelle la fonction setup
 setup(
-    name = "BattleShip V1",
+    name = "Serveur BattleShip",
     version = "1.0",
-    description = "Jeu de bataille navale",
-    executables = [Executable("mainDebut.py")],
+    description = "Serveur de la bataille navale",
+    executables = [Executable("mainServeur.py")],
 )
